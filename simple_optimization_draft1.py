@@ -17,11 +17,21 @@ stage_length = 20 # stage length in meters
 num_dancers = 6     # number of dancers in the formation
 total_spacing = 7   # total spacing, in meters
 
-positions_initial = np.zeros((num_dancers,2))
-positions_final = np.zeros((num_dancers,2))
+positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
 
 positions_initial[:,1] = 0; positions_initial[:,0] = np.linspace(0,-total_spacing,num_dancers)
 positions_final[:,1] = 1; positions_final[:,0] = np.linspace(0,total_spacing,num_dancers)
+
+#%% formation change generator -- n dancers in a circle, uniformly expanding
+
+num_dancers = 6     # number of dancers in the formation
+total_expansion = 2 # how much the "circle" of dancers expands by
+
+positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
+theta_array = np.linspace(0,2*np.pi,num_dancers+1)
+
+positions_initial[:,0] = np.cos(-theta_array[0:-1]); positions_initial[:,1] = np.sin(-theta_array[0:-1])
+positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_final[:,1] = total_expansion * np.sin(theta_array[0:-1])
 
 #%% define objective functions
 
@@ -65,8 +75,6 @@ def plot_objective_values(objective_function_values):
 # contrived example, but graduatlly move onto more elaborate "training data"
 
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
-
-positions_initial[:,0] = np.random.permutation(positions_initial[:,0]) # randomly permute the starting point
 
 indices_final = np.random.permutation(np.arange(0,num_dancers,1))
 indices_available = np.ones((num_dancers,1))
