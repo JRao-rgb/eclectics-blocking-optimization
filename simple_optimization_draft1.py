@@ -33,6 +33,19 @@ theta_array = np.linspace(0,2*np.pi,num_dancers+1)
 positions_initial[:,0] = np.cos(-theta_array[0:-1]); positions_initial[:,1] = np.sin(-theta_array[0:-1])
 positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_final[:,1] = total_expansion * np.sin(theta_array[0:-1])
 
+#%% formation change generator -- n dancers in a circle, uniformly expanding
+
+num_dancers = 6     # number of dancers in the formation
+total_expansion = 2 # how much the "circle" of dancers expands by
+translation = 4     # how much we are translating the whole setup by
+
+positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
+theta_array = np.linspace(0,2*np.pi,num_dancers+1)
+
+positions_initial[:,0] = np.cos(-theta_array[0:-1]); positions_initial[:,1] = np.sin(-theta_array[0:-1])
+positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_final[:,1] = total_expansion * np.sin(theta_array[0:-1])
+positions_final = positions_final + translation
+
 #%% define objective functions
 
 def max_distance_objective(positions_initial, positions_final, indices_final):
