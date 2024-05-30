@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 # - offset = (x, y) away from the center that the "center of mass" of the
 #   formation is located at
 
-def lines_and_windows(num_dancers=28,\
-                      x_size=10,\
-                      y_size=5,\
-                      offset=[0,0],\
-                      num_dancers_per_row=6,\
+def lines_and_windows(num_dancers=28,
+                      x_size=10,
+                      y_size=5,
+                      offset=[0,0],
+                      num_dancers_per_row=6,
                       initial_offset=1):
     
     # create a grid first, then offset every other row, then delete extraneous values
@@ -39,9 +39,9 @@ def lines_and_windows(num_dancers=28,\
     # flatten just converts a 2D array into a 1D array -- it "flattens" it hehe    
     return x.flatten()[0:num_dancers], y.flatten()[0:num_dancers]
 
-def pyramid(num_dancers=28,\
-            base=10,\
-            height=5,\
+def pyramid(num_dancers=28,
+            base=10,
+            height=5,
             offset=[0,0]):
     
     # create a full triangle first, then flatten and delete the unused ones
@@ -62,34 +62,33 @@ def pyramid(num_dancers=28,\
     row = 1
     num_dancers_per_row = 1
     total_dancers = 1
+    x[total_dancers-num_dancers_per_row:total_dancers] = np.linspace(0,num_dancers_per_row-1,num_dancers_per_row)[..., None] - (num_dancers_per_row-1)/2
+    y[total_dancers-num_dancers_per_row:total_dancers] = row-1
     while True:
-        print(row, num_dancers_per_row, total_dancers)
-        print(x[total_dancers-num_dancers_per_row:total_dancers])
-        print(np.linspace(0,num_dancers_per_row,num_dancers_per_row)[..., None])
-        x[total_dancers-num_dancers_per_row:total_dancers] = np.linspace(0,num_dancers_per_row-1,num_dancers_per_row)[..., None] - (num_dancers_per_row-1)/2
-        y[total_dancers-num_dancers_per_row:total_dancers] = row-1
         row += 1
         num_dancers_per_row = row
         total_dancers += num_dancers_per_row
-        if total_dancers > num_dancers:
+        x[total_dancers-num_dancers_per_row:total_dancers] = np.linspace(0,num_dancers_per_row-1,num_dancers_per_row)[..., None] - (num_dancers_per_row-1)/2
+        y[total_dancers-num_dancers_per_row:total_dancers] = row-1
+        if total_dancers >= num_dancers:
             break
         
     # normalize the pyramid array to height of 1, base of 1
-    x = x / (num_dancers_per_row - 2) * 2
-    y = y / (row - 2)
+    x = x / (num_dancers_per_row - 1) * 2
+    y = y / (row - 1)
     
     # scale and offset the pramid
     x = x * base + offset[0]
     y = y * height + offset[0]
     
     # return the arryas, truncated based on num_dancers
-    return x[0:num_dancers], y[0:num_dancers]
+    return x[0:num_dancers,0], y[0:num_dancers,0]
 
-def grid(num_dancers=28,\
-        x_size=10,\
-        y_size=5,\
-        offset=[0,0],\
-        num_dancers_per_row=6,\
+def grid(num_dancers=28,
+        x_size=10,
+        y_size=5,
+        offset=[0,0],
+        num_dancers_per_row=6,
         initial_offset=1):
     
     # create a grid first, then delete extraneous values that correspond to void people
@@ -105,8 +104,8 @@ def grid(num_dancers=28,\
     # flatten just converts a 2D array into a 1D array -- it "flattens" it hehe    
     return x.flatten()[0:num_dancers], y.flatten()[0:num_dancers]
 
-def horizontal_line(num_dancers=28,\
-                    length=10,\
+def horizontal_line(num_dancers=28,
+                    length=10,
                     offset=[0,0]):
     x_coords = np.linspace(-length/2+offset[0], length/2+offset[0], num_dancers)
     y_coords = np.linspace(offset[1],offset[1], num_dancers)
@@ -115,8 +114,8 @@ def horizontal_line(num_dancers=28,\
     
     return x.flatten(), y.flatten()
 
-def vertical_line(num_dancers=28,\
-                  length=10,\
+def vertical_line(num_dancers=28,
+                  length=10,
                   offset=[0,0]):
     
     x_coords = np.linspace(offset[0], offset[0], num_dancers)
@@ -126,15 +125,15 @@ def vertical_line(num_dancers=28,\
     
     return x.flatten(), y.flatten()
 
-def ring(num_dancers=28,\
-         radius=10,\
+def ring(num_dancers=28,
+         radius=5,
          offset=[0,0]):
     
-    theta_array = np.linspace(0,2*np.pi,num_dancers)
-    x = np.cos(theta_array) 
-    y = np.sin(theta_array)
+    theta_array = np.linspace(0,2*np.pi,num_dancers+1)
+    x = radius * np.cos(theta_array) + offset[0]
+    y = radius * np.sin(theta_array) + offset[1]
 
-    return x, y
+    return x[0:-1], y[0:-1]
 
 def clump(n):
     pass
