@@ -144,11 +144,11 @@ def diagonals(n):
 def v(n):
     pass
 
-x, y = lines_and_windows()
-plt.scatter(x,y)
+# x, y = lines_and_windows()
+# plt.scatter(x,y)
 
-x, y = ring()
-plt.scatter(x,y)
+# x, y = ring()
+# plt.scatter(x,y)
 
-x, y = pyramid()
-plt.scatter(x,y)
+# x, y = pyramid()
+# plt.scatter(x,y)

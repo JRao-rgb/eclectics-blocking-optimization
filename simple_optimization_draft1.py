@@ -35,14 +35,14 @@ positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_fi
 
 #%% formation change generator -- n dancers in a circle, uniformly expanding
 
-num_dancers = 20     # number of dancers in the formation
+num_dancers = 10     # number of dancers in the formation
 total_expansion = 2 # how much the "circle" of dancers expands by
 translation = 4     # how much we are translating the whole setup by
 
 positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
 theta_array = np.linspace(0,2*np.pi,num_dancers+1)
 
-positions_initial[:,0] = np.cos(-theta_array[0:-1]); positions_initial[:,1] = np.sin(-theta_array[0:-1])
+positions_initial[:,0] = np.cos(theta_array[0:-1]); positions_initial[:,1] = np.sin(theta_array[0:-1])
 positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_final[:,1] = total_expansion * np.sin(theta_array[0:-1])
 positions_final = positions_final + translation
 
@@ -56,11 +56,30 @@ def max_distance_objective(positions_initial, positions_final, indices_final):
 def intersection_objective(positions_initial, positions_final, indices_final):
     pass
 
+def onSegment(A,B,C):
+    return np.logical_and(np.logical_and(A[:,0] <= np.maximum(B[:,0],C[:,0]), A[:,0] >= np.minimum(B[:,0],C[:,0])), \
+                          np.logical_and(A[:,1] <= np.maximum(B[:,1],C[:,1]), A[:,1] >= np.minimum(B[:,1],C[:,1])))
+
 def ccw(A,B,C):
     return (C[:,1]-A[:,1])*(B[:,0]-A[:,0]) > (B[:,1]-A[:,1])*(C[:,0]-A[:,0])
 
 def intersect(l1p1,l1p2,l2p1,l2p2):
-    return np.logical_and(ccw(l1p1,l2p1,l2p2) != ccw(l1p2,l2p1,l2p2), ccw(l1p1,l1p2,l2p1) != ccw(l1p1,l1p2,l2p2))
+    o1 = ccw(l1p1,l2p1,l2p2)
+    o2 = ccw(l1p2,l2p1,l2p2)
+    o3 = ccw(l1p1,l1p2,l2p1)
+    o4 = ccw(l1p1,l1p2,l2p2)
+    
+    # General Case
+    intersect_arr = np.logical_and(np.not_equal(o1, o2), np.not_equal(o3, o4))
+    
+    # # Special Cases
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o1, False), onSegment(l1p1,l2p1,l1p2)))
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o2, False), onSegment(l1p1,l2p2,l1p2)))
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o3, False), onSegment(l2p1,l1p1,l2p2)))
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o4, False), onSegment(l2p1,l1p2,l2p2)))
+        
+    return intersect_arr
+    
 
 #%% plotting functions
 
@@ -102,21 +121,23 @@ base_array = np.ones(np.shape(positions_initial)) # something to help with vecto
 # setting up the initial condition (for each circle in initial position, find
 # the circle in final position such that Euclidean distance between these two 
 # circles are minimized)
-for i in range(num_dancers):
-    euclidean_distance = np.power(positions_initial[i,:] - np.multiply(positions_final,indices_available),2)
-    euclidean_distance = np.power(np.sum(euclidean_distance,1),0.5)
-    idx = np.nanargmin(euclidean_distance)
-    indices_final[i] = idx
-    indices_available[idx] = np.array([np.nan])
-    objective_function_values[i,:] = max_distance_objective(positions_initial, positions_final, indices_final)
+# for i in range(num_dancers):
+#     euclidean_distance = np.power(positions_initial[i,:] - np.multiply(positions_final,indices_available),2)
+#     euclidean_distance = np.power(np.sum(euclidean_distance,1),0.5)
+#     idx = np.nanargmin(euclidean_distance)
+#     indices_final[i] = idx
+#     indices_available[idx] = np.array([np.nan])
+#     objective_function_values[i,:] = max_distance_objective(positions_initial, positions_final, indices_final)
+
+# indices_final = [5,3,4,2,1,0]
 
 plot_movement(positions_initial,positions_final,indices_final,iteration=-1)
 
 # now for the actual optimization steps
-for z in range(max_iterations): # replace with max_iterations
+for z in range(1): # replace with max_iterations
     # loop through each initial position
     current_loop_permutation = np.random.permutation(num_dancers)
-    for y in range(num_dancers): # replace with num_dancers
+    for y in range(1): # replace with num_dancers
         # for each dancer, make a switch in the path assignmment with the path of
         # another dancer.
         j = current_loop_permutation[y]
@@ -130,6 +151,8 @@ for z in range(max_iterations): # replace with max_iterations
             # swap, and this is the new target number of intersections to shoot
             # for
             k = current_loop_permutation[x]
+            print('y, x, j, k: ',y, x, j, k)
+
             p1_j = np.multiply(positions_initial[j,:],base_array) # the starting position of path for dancer j
             p1_k = np.multiply(positions_initial[k,:],base_array) # the starting position of path for dancer k
             p2_j_original = np.multiply(positions_final[indices_final[j],:],base_array) # the original destination of a path for dancer j
@@ -149,49 +172,49 @@ for z in range(max_iterations): # replace with max_iterations
             if intersection_original_j + intersection_original_k > intersection_swapped_j + intersection_swapped_k \
                 and intersection_swapped_j + intersection_swapped_k < current_intersection_record:
                 ideal_switch_index = k
-                current_intersection_record = intersection_swapped_j + intersection_swapped_k
-                
+            
+            print("intersections: ", intersection_original_j + intersection_original_k, intersection_swapped_j + intersection_swapped_k)
             # print(k, indices_final)
         # now, we make the switch
+        print(ideal_switch_index, end = ' ')
         indices_final[j], indices_final[ideal_switch_index] = indices_final[ideal_switch_index], indices_final[j]
-    
-    # print(indices_final)
-    plot_movement(positions_initial,positions_final,indices_final,iteration=z)
+        print(indices_final)
+        # plot_movement(positions_initial,positions_final,indices_final,iteration=z)
 
 plot_movement(positions_initial,positions_final,indices_final,iteration=z)
 
-#%% optimization attempt 1, given initial and final positions
-# in this attempt, we will use local search. Perform a random switch per round until switching
-# no longer yields a more favorable outcome
+# #%% optimization attempt 1, given initial and final positions
+# # in this attempt, we will use local search. Perform a random switch per round until switching
+# # no longer yields a more favorable outcome
 
-import matplotlib.animation as animation
+# import matplotlib.animation as animation
 
-np.random.seed(0) # set the seed that we will use so the tests are repeatable
+# np.random.seed(0) # set the seed that we will use so the tests are repeatable
 
-indices_final = np.random.permutation(np.arange(0,num_dancers,1))
-indices_temp = indices_final.copy()
+# indices_final = np.random.permutation(np.arange(0,num_dancers,1))
+# indices_temp = indices_final.copy()
 
-max_iterations = 1000
-number_of_changes_befor_quitting = 10
+# max_iterations = 1000
+# number_of_changes_befor_quitting = 10
 
-objective_function_values = np.zeros((max_iterations,1))
+# objective_function_values = np.zeros((max_iterations,1))
 
-# Initialize parameters related for animating the movement
-plt.ioff(); fig, ax = plt.subplots(); frames = []
+# # Initialize parameters related for animating the movement
+# plt.ioff(); fig, ax = plt.subplots(); frames = []
 
-for i in range(max_iterations):
-    idx1 = np.random.randint(0,num_dancers)
-    idx2 = np.random.randint(0,num_dancers)
-    indices_temp[idx1], indices_temp[idx2] = indices_temp[idx2], indices_temp[idx1]
-    if max_distance_objective(positions_initial, positions_final,indices_temp) <= \
-        max_distance_objective(positions_initial, positions_final,indices_final):
-            indices_final = indices_temp.copy()
-    objective_function_values[i,:] = max_distance_objective(positions_initial, positions_final, indices_final)
+# for i in range(max_iterations):
+#     idx1 = np.random.randint(0,num_dancers)
+#     idx2 = np.random.randint(0,num_dancers)
+#     indices_temp[idx1], indices_temp[idx2] = indices_temp[idx2], indices_temp[idx1]
+#     if max_distance_objective(positions_initial, positions_final,indices_temp) <= \
+#         max_distance_objective(positions_initial, positions_final,indices_final):
+#             indices_final = indices_temp.copy()
+#     objective_function_values[i,:] = max_distance_objective(positions_initial, positions_final, indices_final)
     
-# Create an animation
-ani = animation.ArtistAnimation(fig=fig, artists=frames, interval=100, blit=True, repeat_delay=1000)
+# # Create an animation
+# ani = animation.ArtistAnimation(fig=fig, artists=frames, interval=100, blit=True, repeat_delay=1000)
 
-# Save the animation as a video
-ani.save("output_video1.gif", writer="pillow")
+# # Save the animation as a video
+# ani.save("output_video1.gif", writer="pillow")
 
-plot_objective_values(objective_function_values)
+# plot_objective_values(objective_function_values)
