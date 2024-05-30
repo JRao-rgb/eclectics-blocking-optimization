@@ -24,7 +24,7 @@ positions_final[:,1] = 1; positions_final[:,0] = np.linspace(0,total_spacing,num
 
 #%% formation change generator -- n dancers in a circle, uniformly expanding
 
-num_dancers = 6     # number of dancers in the formation
+num_dancers = 15     # number of dancers in the formation
 total_expansion = 2 # how much the "circle" of dancers expands by
 
 positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
@@ -35,14 +35,14 @@ positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_fi
 
 #%% formation change generator -- n dancers in a circle, uniformly expanding
 
-num_dancers = 10     # number of dancers in the formation
+num_dancers = 20     # number of dancers in the formation
 total_expansion = 2 # how much the "circle" of dancers expands by
 translation = 4     # how much we are translating the whole setup by
 
 positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
 theta_array = np.linspace(0,2*np.pi,num_dancers+1)
 
-positions_initial[:,0] = np.cos(theta_array[0:-1]); positions_initial[:,1] = np.sin(theta_array[0:-1])
+positions_initial[:,0] = np.cos(-theta_array[0:-1]); positions_initial[:,1] = np.sin(-theta_array[0:-1])
 positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_final[:,1] = total_expansion * np.sin(theta_array[0:-1])
 positions_final = positions_final + translation
 
@@ -121,29 +121,28 @@ base_array = np.ones(np.shape(positions_initial)) # something to help with vecto
 # setting up the initial condition (for each circle in initial position, find
 # the circle in final position such that Euclidean distance between these two 
 # circles are minimized)
-# for i in range(num_dancers):
-#     euclidean_distance = np.power(positions_initial[i,:] - np.multiply(positions_final,indices_available),2)
-#     euclidean_distance = np.power(np.sum(euclidean_distance,1),0.5)
-#     idx = np.nanargmin(euclidean_distance)
-#     indices_final[i] = idx
-#     indices_available[idx] = np.array([np.nan])
-#     objective_function_values[i,:] = max_distance_objective(positions_initial, positions_final, indices_final)
-
-# indices_final = [5,3,4,2,1,0]
+for i in range(num_dancers):
+    euclidean_distance = np.power(positions_initial[i,:] - np.multiply(positions_final,indices_available),2)
+    euclidean_distance = np.power(np.sum(euclidean_distance,1),0.5)
+    idx = np.nanargmin(euclidean_distance)
+    indices_final[i] = idx
+    indices_available[idx] = np.array([np.nan])
+    objective_function_values[i,:] = max_distance_objective(positions_initial, positions_final, indices_final)
 
 plot_movement(positions_initial,positions_final,indices_final,iteration=-1)
 
 # now for the actual optimization steps
-for z in range(1): # replace with max_iterations
+for z in range(max_iterations): # replace with max_iterations
     # loop through each initial position
     current_loop_permutation = np.random.permutation(num_dancers)
-    for y in range(1): # replace with num_dancers
+    for y in range(num_dancers): # replace with num_dancers
         # for each dancer, make a switch in the path assignmment with the path of
         # another dancer.
         j = current_loop_permutation[y]
         ideal_switch_index = j
         current_intersection_record = 1000 # some ridiculous large number
         for x in range(y+1,num_dancers): # replace with num_dancers - 1
+            
             # now we are at the meat of it. We will count the number of intersections
             # in the path of dancer j and dancer k in the current case. Then,
             # we will swap the destinations of dancer j and dancer k and see
@@ -151,7 +150,6 @@ for z in range(1): # replace with max_iterations
             # swap, and this is the new target number of intersections to shoot
             # for
             k = current_loop_permutation[x]
-            print('y, x, j, k: ',y, x, j, k)
 
             p1_j = np.multiply(positions_initial[j,:],base_array) # the starting position of path for dancer j
             p1_k = np.multiply(positions_initial[k,:],base_array) # the starting position of path for dancer k
@@ -172,13 +170,11 @@ for z in range(1): # replace with max_iterations
             if intersection_original_j + intersection_original_k > intersection_swapped_j + intersection_swapped_k \
                 and intersection_swapped_j + intersection_swapped_k < current_intersection_record:
                 ideal_switch_index = k
+                current_intersection_record = intersection_swapped_j + intersection_swapped_k
             
-            print("intersections: ", intersection_original_j + intersection_original_k, intersection_swapped_j + intersection_swapped_k)
             # print(k, indices_final)
         # now, we make the switch
-        print(ideal_switch_index, end = ' ')
         indices_final[j], indices_final[ideal_switch_index] = indices_final[ideal_switch_index], indices_final[j]
-        print(indices_final)
         # plot_movement(positions_initial,positions_final,indices_final,iteration=z)
 
 plot_movement(positions_initial,positions_final,indices_final,iteration=z)

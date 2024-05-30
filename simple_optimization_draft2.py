@@ -13,7 +13,7 @@ os.chdir("C:\\Users\\jraos\\OneDrive - Stanford\\Documents\\Stanford\\EC\\Eclect
 import formations
 import computational_geometry as geo
 
-num_dancers = 10
+num_dancers = 20
 num_formations = 2
 
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
@@ -21,7 +21,7 @@ np.random.seed(42) # set the seed that we will use so the tests are repeatable
 X = np.zeros((num_dancers,num_formations),dtype=np.float16)
 Y = np.zeros((num_dancers,num_formations),dtype=np.float16)
 
-max_iteration = 15 # number of maximum iterations to go over one permutation
+max_iteration = 3 # number of maximum iterations to go over one permutation
 
 # begin the optimization procedure. Let'd o one optimmization procedure first.
 # let's start by defining the variables we need for this.
@@ -52,17 +52,12 @@ geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
 for formation in range(num_formations-1):
     i = formation
     # loop over iterations per formation
-    for iteration in range(1):
+    for iteration in range(max_iteration):
         # randomize the order at which we scan through the dancers here
         current_iter_permutation = np.random.permutation(num_dancers)
-        current_iter_permutation_inv = np.zeros(np.shape(current_iter_permutation))
-        # current_iter_permutation = np.linspace(0,num_dancers-1,num_dancers,dtype=np.int8)
-        p = current_iter_permutation
-        q = current_iter_permutation_inv
-        q[p[np.linspace(0,num_dancers-1,num_dancers,dtype=np.int8)]] = np.linspace(0,num_dancers-1,num_dancers,dtype=np.int8)
-        q = np.int8(q)
+        p = current_iter_permutation        
         # loop over each dancer-1 (since need at least 2 dancers to make a switch)
-        for dancer1 in range(1): # range(num_dancers-1)
+        for dancer1 in range(num_dancers): # range(num_dancers-1)
             k = current_iter_permutation[dancer1]
             # loop over the rest of the dancers. Now we are swapping dancer k and l
             k_p1_x = np.full((num_dancers,num_dancers-dancer1-1),X[P[k,i],i])
@@ -82,9 +77,6 @@ for formation in range(num_formations-1):
             
             for dancer2 in range(dancer1+1,num_dancers):
                 l = current_iter_permutation[dancer2]
-                
-                print('d1, d2, k, l: ', dancer1, dancer2, k, l)
-
                 k_p2_x_original[:,dancer2-dancer1-1] = np.transpose(np.tile(X[P[k,i+1],i+1],num_dancers))
                 k_p2_y_original[:,dancer2-dancer1-1] = np.transpose(np.tile(Y[P[k,i+1],i+1],num_dancers))
                 k_p2_x_swapped[:,dancer2-dancer1-1]  = np.transpose(np.tile(X[P[l,i+1],i+1],num_dancers))
@@ -115,15 +107,12 @@ for formation in range(num_formations-1):
             num_intersection_original = np.sum(arr_intersection_original,axis=0)
             num_intersection_swapped  = np.sum(arr_intersection_swapped,axis=0)
             
-            print(num_intersection_original, num_intersection_swapped)
             # if np.max(num_intersection_original - num_intersection_swapped) <= 0: continue
             num_intersection_swapped[num_intersection_original < num_intersection_swapped]=1000
             ideal_swap_idx = np.argmin(num_intersection_swapped)
-            print(p[dancer1+ideal_swap_idx+1], ideal_swap_idx, q[dancer1+ideal_swap_idx+1], end = ' ')
             
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
             P[k,i+1], P[p[dancer1+ideal_swap_idx+1],i+1] = P[p[dancer1+ideal_swap_idx+1],i+1], P[k,i+1]
-            print(np.transpose(P[:,1]))
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
             
 geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
