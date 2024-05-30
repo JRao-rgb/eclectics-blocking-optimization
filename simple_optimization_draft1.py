@@ -35,7 +35,7 @@ positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_fi
 
 #%% formation change generator -- n dancers in a circle, uniformly expanding
 
-num_dancers = 6     # number of dancers in the formation
+num_dancers = 20     # number of dancers in the formation
 total_expansion = 2 # how much the "circle" of dancers expands by
 translation = 4     # how much we are translating the whole setup by
 
@@ -57,10 +57,10 @@ def intersection_objective(positions_initial, positions_final, indices_final):
     pass
 
 def ccw(A,B,C):
-    return (C[1]-A[1])*(B[0]-A[0]) > (B[1]-A[1])*(C[0]-A[0])
+    return (C[:,1]-A[:,1])*(B[:,0]-A[:,0]) > (B[:,1]-A[:,1])*(C[:,0]-A[:,0])
 
 def intersect(l1p1,l1p2,l2p1,l2p2):
-    return ccw(l1p1,l2p1,l2p2) != ccw(l1p2,l2p1,l2p2) and ccw(l1p1,l1p2,l2p1) != ccw(l1p1,l1p2,l2p2)
+    return np.logical_and(ccw(l1p1,l2p1,l2p2) != ccw(l1p2,l2p1,l2p2), ccw(l1p1,l1p2,l2p1) != ccw(l1p1,l1p2,l2p2))
 
 #%% plotting functions
 
@@ -89,13 +89,15 @@ def plot_objective_values(objective_function_values):
 
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
 
-indices_final = np.random.permutation(np.arange(0,num_dancers,1))
+indices_final = np.random.permutation(num_dancers)
 indices_available = np.ones((num_dancers,1))
 
-max_iterations = 10
+max_iterations = 3
 number_of_changes_befor_quitting = 10
 
-objective_function_values = np.zeros((max_iterations,1))
+objective_function_values = np.zeros((num_dancers+max_iterations,1))
+
+base_array = np.ones(np.shape(positions_initial)) # something to help with vectorizing
 
 # setting up the initial condition (for each circle in initial position, find
 # the circle in final position such that Euclidean distance between these two 
@@ -108,51 +110,40 @@ for i in range(num_dancers):
     indices_available[idx] = np.array([np.nan])
     objective_function_values[i,:] = max_distance_objective(positions_initial, positions_final, indices_final)
 
-plot_movement(positions_initial,positions_final,indices_final,iteration=234)
+plot_movement(positions_initial,positions_final,indices_final,iteration=-1)
 
 # now for the actual optimization steps
-for i in range(3): # replace with max_iterations
+for z in range(max_iterations): # replace with max_iterations
     # loop through each initial position
-    for j in range(num_dancers): # replace with num_dancers
+    current_loop_permutation = np.random.permutation(num_dancers)
+    for y in range(num_dancers): # replace with num_dancers
         # for each dancer, make a switch in the path assignmment with the path of
         # another dancer.
+        j = current_loop_permutation[y]
         ideal_switch_index = j
         current_intersection_record = 1000 # some ridiculous large number
-        for k in range(j,num_dancers): # replace with num_dancers - 1
+        for x in range(y+1,num_dancers): # replace with num_dancers - 1
             # now we are at the meat of it. We will count the number of intersections
             # in the path of dancer j and dancer k in the current case. Then,
             # we will swap the destinations of dancer j and dancer k and see
             # if that results in less intersections. If it does, we keep the
             # swap, and this is the new target number of intersections to shoot
             # for
-            p1_j = positions_initial[j,:] # the starting position of path for dancer j
-            p1_k = positions_initial[k,:] # the starting position of path for dancer k
-            p2_j_original = positions_final[indices_final[j],:] # the original destination of a path for dancer j
-            p2_k_original = positions_final[indices_final[k],:] # the original destination of a path for dancer k
-            p2_j_swapped  = positions_final[indices_final[k],:] # the swapped  destination of a path for dancer j
-            p2_k_swapped  = positions_final[indices_final[j],:] # the swapped  destination of a path for dancer k
-            
-            intersection_original_j = 0
-            intersection_swapped_j  = 0
-            intersection_original_k = 0
-            intersection_swapped_k  = 0
+            k = current_loop_permutation[x]
+            p1_j = np.multiply(positions_initial[j,:],base_array) # the starting position of path for dancer j
+            p1_k = np.multiply(positions_initial[k,:],base_array) # the starting position of path for dancer k
+            p2_j_original = np.multiply(positions_final[indices_final[j],:],base_array) # the original destination of a path for dancer j
+            p2_k_original = np.multiply(positions_final[indices_final[k],:],base_array) # the original destination of a path for dancer k
+            p2_j_swapped  = np.multiply(positions_final[indices_final[k],:],base_array) # the swapped  destination of a path for dancer j
+            p2_k_swapped  = np.multiply(positions_final[indices_final[j],:],base_array) # the swapped  destination of a path for dancer k
             
             # now, for each of these two paths, we will count the number of 
             # intersections they each have with all other paths
-            for l in range(num_dancers):
-                if l == j:
-                    continue
-                p1_l = positions_initial[l,:]
-                p2_l = positions_final[indices_final[l],:]
-                # check if the intersection exists
-                if intersect(p1_j,p2_j_original,p1_l,p2_l):
-                    intersection_original_j += 1
-                if intersect(p1_j,p2_j_swapped, p1_l,p2_l):
-                    intersection_swapped_j  += 1
-                if intersect(p1_k,p2_k_original,p1_l,p2_l):
-                    intersection_original_k += 1
-                if intersect(p1_k,p2_k_swapped, p1_l,p2_l):
-                    intersection_swapped_k  += 1
+            # check if the intersection exists
+            intersection_original_j = np.sum(intersect(p1_j,p2_j_original,positions_initial,positions_final[indices_final,:]))
+            intersection_swapped_j  = np.sum(intersect(p1_j,p2_j_swapped,positions_initial,positions_final[indices_final,:]))
+            intersection_original_k = np.sum(intersect(p1_k,p2_k_original,positions_initial,positions_final[indices_final,:]))
+            intersection_swapped_k  = np.sum(intersect(p1_k,p2_k_swapped,positions_initial,positions_final[indices_final,:]))
                  
             # if the intersection calculations turn out to be favorable...
             if intersection_original_j + intersection_original_k > intersection_swapped_j + intersection_swapped_k \
@@ -165,9 +156,9 @@ for i in range(3): # replace with max_iterations
         indices_final[j], indices_final[ideal_switch_index] = indices_final[ideal_switch_index], indices_final[j]
     
     # print(indices_final)
-    plot_movement(positions_initial,positions_final,indices_final,iteration=i)
+    plot_movement(positions_initial,positions_final,indices_final,iteration=z)
 
-            
+plot_movement(positions_initial,positions_final,indices_final,iteration=z)
 
 #%% optimization attempt 1, given initial and final positions
 # in this attempt, we will use local search. Perform a random switch per round until switching
