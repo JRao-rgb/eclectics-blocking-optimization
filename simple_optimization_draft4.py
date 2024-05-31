@@ -14,7 +14,7 @@ import formations
 import computational_geometry as geo
 import metrics
 
-num_dancers = 30
+num_dancers = 28
 num_formations = 3
 
 sf1 = 1
@@ -159,4 +159,4 @@ end_time = time.time()
 print("Optimization Completed. Time elapsed: ",end_time-start_time)
 
 #%%
-geo.animate_movement(X_raw,Y_raw,P,filename="no normalized COM, intersection.gif")
+geo.animate_movement(X_raw,Y_raw,P,filename="no normalized COM, intersection, centered pyramid, 28 dancers.gif")

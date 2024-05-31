@@ -15,8 +15,8 @@ def num_intersections(X,Y,P):
         for j in range(np.shape(X)[0]):
             num_intersections += np.sum(geo.intersect(X[P[j,i],i],Y[P[j,i],i],
                                                        X[P[j,i+1],i+1],Y[P[j,i+1],i+1],
-                                                       X[P[:,i],i],Y[P[:,i],i],
-                                                       X[P[:,i+1],i+1],Y[P[:,i+1],i+1]))
+                                                       X[P[j::,i],i],Y[P[j::,i],i],
+                                                       X[P[j::,i+1],i+1],Y[P[j::,i+1],i+1]))
     return num_intersections
 
 def max_distance(X,Y,P):
