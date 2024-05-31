@@ -30,7 +30,7 @@ total_expansion = 2 # how much the "circle" of dancers expands by
 positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
 theta_array = np.linspace(0,2*np.pi,num_dancers+1)
 
-positions_initial[:,0] = np.cos(-theta_array[0:-1]); positions_initial[:,1] = np.sin(-theta_array[0:-1])
+positions_initial[:,0] = np.cos(theta_array[0:-1]); positions_initial[:,1] = np.sin(theta_array[0:-1])
 positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_final[:,1] = total_expansion * np.sin(theta_array[0:-1])
 
 #%% formation change generator -- n dancers in a circle, uniformly expanding
@@ -42,7 +42,7 @@ translation = 4     # how much we are translating the whole setup by
 positions_initial = np.zeros((num_dancers,2)); positions_final = np.zeros((num_dancers,2))
 theta_array = np.linspace(0,2*np.pi,num_dancers+1)
 
-positions_initial[:,0] = np.cos(-theta_array[0:-1]); positions_initial[:,1] = np.sin(-theta_array[0:-1])
+positions_initial[:,0] = np.cos(theta_array[0:-1]); positions_initial[:,1] = np.sin(theta_array[0:-1])
 positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_final[:,1] = total_expansion * np.sin(theta_array[0:-1])
 positions_final = positions_final + translation
 
@@ -132,7 +132,7 @@ for i in range(num_dancers):
 plot_movement(positions_initial,positions_final,indices_final,iteration=-1)
 
 # now for the actual optimization steps
-for z in range(max_iterations): # replace with max_iterations
+for z in range(3): # replace with max_iterations
     # loop through each initial position
     current_loop_permutation = np.random.permutation(num_dancers)
     for y in range(num_dancers): # replace with num_dancers
@@ -140,9 +140,8 @@ for z in range(max_iterations): # replace with max_iterations
         # another dancer.
         j = current_loop_permutation[y]
         ideal_switch_index = j
-        current_intersection_record = 1000 # some ridiculous large number
+        current_intersection_record = 2000 # some ridiculous large number
         for x in range(y+1,num_dancers): # replace with num_dancers - 1
-            
             # now we are at the meat of it. We will count the number of intersections
             # in the path of dancer j and dancer k in the current case. Then,
             # we will swap the destinations of dancer j and dancer k and see
@@ -150,7 +149,6 @@ for z in range(max_iterations): # replace with max_iterations
             # swap, and this is the new target number of intersections to shoot
             # for
             k = current_loop_permutation[x]
-
             p1_j = np.multiply(positions_initial[j,:],base_array) # the starting position of path for dancer j
             p1_k = np.multiply(positions_initial[k,:],base_array) # the starting position of path for dancer k
             p2_j_original = np.multiply(positions_final[indices_final[j],:],base_array) # the original destination of a path for dancer j
@@ -171,9 +169,10 @@ for z in range(max_iterations): # replace with max_iterations
                 and intersection_swapped_j + intersection_swapped_k < current_intersection_record:
                 ideal_switch_index = k
                 current_intersection_record = intersection_swapped_j + intersection_swapped_k
+                # print("new record",current_intersection_record,"index",k)
             
-            # print(k, indices_final)
         # now, we make the switch
+        print(ideal_switch_index, end = ' ')
         indices_final[j], indices_final[ideal_switch_index] = indices_final[ideal_switch_index], indices_final[j]
         # plot_movement(positions_initial,positions_final,indices_final,iteration=z)
 

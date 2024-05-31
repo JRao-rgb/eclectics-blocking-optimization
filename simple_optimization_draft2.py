@@ -21,7 +21,7 @@ np.random.seed(42) # set the seed that we will use so the tests are repeatable
 X = np.zeros((num_dancers,num_formations),dtype=np.float16)
 Y = np.zeros((num_dancers,num_formations),dtype=np.float16)
 
-max_iteration = 3 # number of maximum iterations to go over one permutation
+max_iteration = 20 # number of maximum iterations to go over one permutation
 
 # begin the optimization procedure. Let'd o one optimmization procedure first.
 # let's start by defining the variables we need for this.
@@ -46,18 +46,25 @@ P[:,1] = np.random.permutation(num_dancers)
 # P[:,1] = [5,3,4,2,1,0]
 P_ = np.copy(P)
 
-geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
-
 # loop over formations-1
 for formation in range(num_formations-1):
     i = formation
+    # initialize a permutation for each formation based on Euclidean distance
+    idx_available = np.ones((1,num_dancers))
+    for dancer in range(num_dancers):
+        Euclidean_distance = (np.power(X[dancer,i]-np.multiply(X[:,i+1],idx_available),2) +\
+                              np.power(Y[dancer,i]-np.multiply(Y[:,i+1],idx_available),2))
+        idx = np.nanargmin(Euclidean_distance)
+        P[dancer,i+1] = idx
+        idx_available[:,idx] = np.array([np.nan])
+    geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
     # loop over iterations per formation
     for iteration in range(max_iteration):
         # randomize the order at which we scan through the dancers here
         current_iter_permutation = np.random.permutation(num_dancers)
         p = current_iter_permutation        
         # loop over each dancer-1 (since need at least 2 dancers to make a switch)
-        for dancer1 in range(num_dancers): # range(num_dancers-1)
+        for dancer1 in range(num_dancers-1): # range(num_dancers-1)
             k = current_iter_permutation[dancer1]
             # loop over the rest of the dancers. Now we are swapping dancer k and l
             k_p1_x = np.full((num_dancers,num_dancers-dancer1-1),X[P[k,i],i])
@@ -106,11 +113,16 @@ for formation in range(num_formations-1):
                                         
             num_intersection_original = np.sum(arr_intersection_original,axis=0)
             num_intersection_swapped  = np.sum(arr_intersection_swapped,axis=0)
+            temp = num_intersection_swapped.copy()
             
-            # if np.max(num_intersection_original - num_intersection_swapped) <= 0: continue
-            num_intersection_swapped[num_intersection_original < num_intersection_swapped]=1000
-            ideal_swap_idx = np.argmin(num_intersection_swapped)
+            if all(num_intersection_original <= num_intersection_swapped):
+                ideal_swap_idx = -1
+            else:
+                # if np.max(num_intersection_original - num_intersection_swapped) <= 0: continue
+                num_intersection_swapped[num_intersection_original <= num_intersection_swapped]=1000
+                ideal_swap_idx = np.argmin(num_intersection_swapped)
             
+            # print(p[dancer1+ideal_swap_idx+1], end = ' ')
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
             P[k,i+1], P[p[dancer1+ideal_swap_idx+1],i+1] = P[p[dancer1+ideal_swap_idx+1],i+1], P[k,i+1]
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
