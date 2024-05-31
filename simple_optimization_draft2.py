@@ -8,20 +8,21 @@ Created on Thu May 30 06:01:49 2024
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+import time
 os.chdir("C:\\Users\\jraos\\OneDrive - Stanford\\Documents\\Stanford\\EC\\Eclectics Blocking Optimization\\eclectics-blocking-optimization")
 import formations
 import computational_geometry as geo
 
-num_dancers = 20
+num_dancers = 50
 num_formations = 2
 
+start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
 
 X = np.zeros((num_dancers,num_formations),dtype=np.float16)
 Y = np.zeros((num_dancers,num_formations),dtype=np.float16)
 
-max_iteration = 20 # number of maximum iterations to go over one permutation
+max_iteration = 50 # number of maximum iterations to go over one permutation
 
 # begin the optimization procedure. Let'd o one optimmization procedure first.
 # let's start by defining the variables we need for this.
@@ -57,7 +58,6 @@ for formation in range(num_formations-1):
         idx = np.nanargmin(Euclidean_distance)
         P[dancer,i+1] = idx
         idx_available[:,idx] = np.array([np.nan])
-    geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
     # loop over iterations per formation
     for iteration in range(max_iteration):
         # randomize the order at which we scan through the dancers here
@@ -128,3 +128,5 @@ for formation in range(num_formations-1):
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
             
 geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
+end_time = time.time()
+print("refactored code: ",end_time-start_time)

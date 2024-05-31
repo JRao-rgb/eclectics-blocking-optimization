@@ -8,6 +8,7 @@ Created on Fri May  3 20:36:25 2024
 
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 stage_width = 10 # stage width in meters
 stage_length = 20 # stage length in meters
@@ -35,7 +36,7 @@ positions_final[:,0] = total_expansion * np.cos(theta_array[0:-1]); positions_fi
 
 #%% formation change generator -- n dancers in a circle, uniformly expanding
 
-num_dancers = 20     # number of dancers in the formation
+num_dancers = 50     # number of dancers in the formation
 total_expansion = 2 # how much the "circle" of dancers expands by
 translation = 4     # how much we are translating the whole setup by
 
@@ -106,12 +107,13 @@ def plot_objective_values(objective_function_values):
 # first, find the shortest path that connects all of the dancers. Start with this
 # contrived example, but graduatlly move onto more elaborate "training data"
 
+start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
 
 indices_final = np.random.permutation(num_dancers)
 indices_available = np.ones((num_dancers,1))
 
-max_iterations = 3
+max_iterations = 50
 number_of_changes_befor_quitting = 10
 
 objective_function_values = np.zeros((num_dancers+max_iterations,1))
@@ -132,7 +134,7 @@ for i in range(num_dancers):
 plot_movement(positions_initial,positions_final,indices_final,iteration=-1)
 
 # now for the actual optimization steps
-for z in range(3): # replace with max_iterations
+for z in range(max_iterations): # replace with max_iterations
     # loop through each initial position
     current_loop_permutation = np.random.permutation(num_dancers)
     for y in range(num_dancers): # replace with num_dancers
@@ -172,11 +174,14 @@ for z in range(3): # replace with max_iterations
                 # print("new record",current_intersection_record,"index",k)
             
         # now, we make the switch
-        print(ideal_switch_index, end = ' ')
+        # print(ideal_switch_index, end = ' ')
         indices_final[j], indices_final[ideal_switch_index] = indices_final[ideal_switch_index], indices_final[j]
         # plot_movement(positions_initial,positions_final,indices_final,iteration=z)
 
 plot_movement(positions_initial,positions_final,indices_final,iteration=z)
+
+end_time = time.time()
+print("original code: ",end_time-start_time)
 
 # #%% optimization attempt 1, given initial and final positions
 # # in this attempt, we will use local search. Perform a random switch per round until switching

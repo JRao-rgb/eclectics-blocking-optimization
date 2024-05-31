@@ -45,6 +45,26 @@ def plot_movement(X_initial,X_final,Y_initial,Y_final,indices_initial,indices_fi
         plt.arrow(x,y,dx,dy)
     plt.title("movement")
         
+def ccw2(A,B,C):
+    return (C[:,1]-A[:,1])*(B[:,0]-A[:,0]) > (B[:,1]-A[:,1])*(C[:,0]-A[:,0])
+
+def intersect2(l1p1,l1p2,l2p1,l2p2):
+    o1 = ccw2(l1p1,l2p1,l2p2)
+    o2 = ccw2(l1p2,l2p1,l2p2)
+    o3 = ccw2(l1p1,l1p2,l2p1)
+    o4 = ccw2(l1p1,l1p2,l2p2)
+    
+    # General Case
+    intersect_arr = np.logical_and(np.not_equal(o1, o2), np.not_equal(o3, o4))
+    
+    # # Special Cases
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o1, False), onSegment(l1p1,l2p1,l1p2)))
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o2, False), onSegment(l1p1,l2p2,l1p2)))
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o3, False), onSegment(l2p1,l1p1,l2p2)))
+    # intersect_arr = np.logical_or(intersect_arr,np.logical_and(np.equal(o4, False), onSegment(l2p1,l1p2,l2p2)))
+        
+    return intersect_arr
+    
 #%% animating the formations as each dancer moves from one to another
 
 
