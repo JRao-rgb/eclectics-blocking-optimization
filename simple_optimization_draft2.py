@@ -13,8 +13,8 @@ os.chdir("C:\\Users\\jraos\\OneDrive - Stanford\\Documents\\Stanford\\EC\\Eclect
 import formations
 import computational_geometry as geo
 
-num_dancers = 50
-num_formations = 2
+num_dancers = 30
+num_formations = 3
 
 start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
@@ -22,7 +22,7 @@ np.random.seed(42) # set the seed that we will use so the tests are repeatable
 X = np.zeros((num_dancers,num_formations),dtype=np.float16)
 Y = np.zeros((num_dancers,num_formations),dtype=np.float16)
 
-max_iteration = 50 # number of maximum iterations to go over one permutation
+max_iteration = np.int16(np.round(num_dancers/3)) # number of maximum iterations to go over one permutation
 
 # begin the optimization procedure. Let'd o one optimmization procedure first.
 # let's start by defining the variables we need for this.
@@ -37,9 +37,9 @@ M = np.full(num_dancers, np.NAN) # mapping array that goes from physical locatio
 
 # ======================= suitable break point ============================
 
-X[:,0], Y[:,0] = formations.ring(num_dancers = num_dancers, radius = 1)
-X[:,1], Y[:,1] = formations.ring(num_dancers = num_dancers, radius = 2, offset = [4,4])
-# X[:,2], Y[:,2] = formations.ring(num_dancers = num_dancers)
+X[:,0], Y[:,0] = formations.lines_and_windows(num_dancers = num_dancers)
+X[:,1], Y[:,1] = formations.pyramid(num_dancers = num_dancers)
+X[:,2], Y[:,2] = formations.ring(num_dancers = num_dancers)
 
 # initialize the permutation matrix
 P[:,] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
@@ -53,8 +53,8 @@ for formation in range(num_formations-1):
     # initialize a permutation for each formation based on Euclidean distance
     idx_available = np.ones((1,num_dancers))
     for dancer in range(num_dancers):
-        Euclidean_distance = (np.power(X[dancer,i]-np.multiply(X[:,i+1],idx_available),2) +\
-                              np.power(Y[dancer,i]-np.multiply(Y[:,i+1],idx_available),2))
+        Euclidean_distance = (np.power(X[P[dancer,i],i]-np.multiply(X[:,i+1],idx_available),2) +\
+                              np.power(Y[P[dancer,i],i]-np.multiply(Y[:,i+1],idx_available),2))
         idx = np.nanargmin(Euclidean_distance)
         P[dancer,i+1] = idx
         idx_available[:,idx] = np.array([np.nan])
@@ -127,6 +127,9 @@ for formation in range(num_formations-1):
             P[k,i+1], P[p[dancer1+ideal_swap_idx+1],i+1] = P[p[dancer1+ideal_swap_idx+1],i+1], P[k,i+1]
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
             
-geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
+    geo.plot_movement(X[:,i], X[:,i+1], Y[:,i], Y[:,i+1], P[:,i], P[:,i+1])
 end_time = time.time()
-print("refactored code: ",end_time-start_time)
+print("Optimization Completed. Time elapsed: ",end_time-start_time)
+
+#%%
+geo.animate_movement(X,Y,P)

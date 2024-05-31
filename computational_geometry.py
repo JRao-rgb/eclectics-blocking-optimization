@@ -7,6 +7,7 @@ Created on Thu May 30 06:19:02 2024
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 def onSegment(A,B,C):
     return np.logical_and(np.logical_and(A[:,0] <= np.maximum(B[:,0],C[:,0]), A[:,0] >= np.minimum(B[:,0],C[:,0])), \
@@ -65,6 +66,57 @@ def intersect2(l1p1,l1p2,l2p1,l2p2):
         
     return intersect_arr
     
+def animate_movement(X,Y,P,
+                     frames_per_transition=10,frames_per_formation=10,fps = 15,
+                     file_name="animated_formations.gif",writer="pillow"):
+    fpf = frames_per_formation
+    fpt = frames_per_transition
+    
+    num_frames = (np.shape(X)[1]-1) * fpf + np.shape(X)[1] * fpt
+    
+    X_ = -1 * np.ones((np.shape(X)[0],num_frames))
+    Y_ = -1 * np.ones((np.shape(Y)[0],num_frames))
+    
+    for i in range(np.shape(X)[1]-1):
+        # create the initial freeze frames
+        for k in range(fpf):
+            X_[:,i*(fpf+fpt)+k] = X[P[:,i],i]
+            Y_[:,i*(fpf+fpt)+k] = Y[P[:,i],i]
+            
+        for j in range(fpt):
+            x1 = X[P[:,i],i]
+            x2 = X[P[:,i+1],i+1]
+            y1 = Y[P[:,i],i]
+            y2 = Y[P[:,i+1],i+1]
+
+            X_[:,i*(fpf+fpt)+fpf+j] = x1 + j * (x2-x1)/fpt
+            Y_[:,i*(fpf+fpt)+fpf+j] = y1 + j * (y2-y1)/fpt
+    
+    for k in range(fpf):
+        X_[:,np.shape(X)[1]*(fpf+fpt)-fpf-1-k] = X[P[:,-1],-1]
+        Y_[:,np.shape(X)[1]*(fpf+fpt)-fpf-1-k] = Y[P[:,-1],-1]
+    
+    # Create a figure
+    plt.ioff()
+    fig, ax = plt.subplots()
+    
+    # Initialize an empty list to store frames
+    frames = []
+    
+    # Add images to frames
+    for i in range(num_frames):
+        container = ax.scatter(X_[:,i], Y_[:,i], animated=True, color='b')
+        plt.xlim(-10,10)
+        plt.ylim(-5,5)
+        ax.set_aspect('equal','box')
+        frames.append([container])
+    
+    # Create an animation
+    ani = animation.ArtistAnimation(fig=fig, artists=frames, interval=1/fps*1000, blit=True, repeat_delay=1000)
+    
+    # Save the animation as a video
+    ani.save(file_name, writer=writer)
+
 #%% animating the formations as each dancer moves from one to another
 
 
