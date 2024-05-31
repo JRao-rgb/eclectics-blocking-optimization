@@ -36,8 +36,22 @@ def lines_and_windows(num_dancers=28,
     x[0::2, :] += initial_offset*x_spacing/4
     x[1::2, :] -= initial_offset*x_spacing/4
 
-    # flatten just converts a 2D array into a 1D array -- it "flattens" it hehe    
-    return x.flatten()[0:num_dancers], y.flatten()[0:num_dancers]
+    # symmetrize
+    total_dancers = num_dancers_per_col * num_dancers_per_row # this is how many
+    # dancers we would have if the grid was completely filled
+    
+    d = num_dancers_per_row
+    l = np.int8(num_dancers - (total_dancers - num_dancers_per_row))
+    f = np.int8(total_dancers - num_dancers_per_row)
+    offset_idx = np.int8(math.floor((d-l)/2))
+    
+    # flatten just converts a 2D array into a 1D array -- it "flattens" it hehe  
+    x = x.flatten(); y = y.flatten()
+    
+    x = np.concatenate([x[0:f],x[f+offset_idx:f+offset_idx+l]])
+    y = np.concatenate([y[0:f],y[f+offset_idx:f+offset_idx+l]])
+  
+    return x, y
 
 def pyramid(num_dancers=28,
             base=10,
@@ -75,14 +89,23 @@ def pyramid(num_dancers=28,
         
     # normalize the pyramid array to height of 1, base of 1
     x = x / (num_dancers_per_row - 1) * 2
-    y = y / (row - 1)
+    y = y / (row - 1) - 0.5
     
     # scale and offset the pramid
     x = x * base + offset[0]
     y = y * height + offset[0]
     
+    # symmetrizing the formation
+    d = num_dancers_per_row
+    l = np.int8(num_dancers - (total_dancers - num_dancers_per_row))
+    f = np.int8(total_dancers - num_dancers_per_row)
+    offset_idx = np.int8(np.floor((d-l)/2))
+    
+    x = np.concatenate([x[0:f],x[f+offset_idx:f+offset_idx+l]])
+    y = np.concatenate([y[0:f],y[f+offset_idx:f+offset_idx+l]])
+    
     # return the arryas, truncated based on num_dancers
-    return x[0:num_dancers,0], y[0:num_dancers,0]
+    return x, y
 
 def grid(num_dancers=28,
         x_size=10,
@@ -100,9 +123,23 @@ def grid(num_dancers=28,
     
     # generating the actual x and y coordinates
     x, y = np.meshgrid(x_coords,y_coords)
+    
+    # symmetrize
+    total_dancers = num_dancers_per_col * num_dancers_per_row # this is how many
+    # dancers we would have if the grid was completely filled
+    
+    d = num_dancers_per_row
+    l = np.int8(num_dancers - (total_dancers - num_dancers_per_row))
+    f = np.int8(total_dancers - num_dancers_per_row)
+    offset_idx = np.int8(math.floor((d-l)/2))
+    
+    x = x.flatten(); y = y.flatten()
+    
+    x = np.concatenate([x[0:f],x[f+offset_idx:f+offset_idx+l]])
+    y = np.concatenate([y[0:f],y[f+offset_idx:f+offset_idx+l]])
 
     # flatten just converts a 2D array into a 1D array -- it "flattens" it hehe    
-    return x.flatten()[0:num_dancers], y.flatten()[0:num_dancers]
+    return x, y
 
 def horizontal_line(num_dancers=28,
                     length=10,
@@ -144,7 +181,10 @@ def diagonals(n):
 def v(n):
     pass
 
-# x, y = lines_and_windows()
+# x, y = lines_and_windows(num_dancers = 33)
+# plt.scatter(x,y)
+
+# x, y = grid(num_dancers = 24,num_dancers_per_row=8)
 # plt.scatter(x,y)
 
 # x, y = ring()
