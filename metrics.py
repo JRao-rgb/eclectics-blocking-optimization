@@ -20,7 +20,11 @@ def num_intersections(X,Y,P):
     return num_intersections
 
 def max_distance(X,Y,P):
-    pass
+    for i in range(np.shape(X)[1]-1):
+        distance = np.power(np.power(X[P[:,i+1],i+1]-X[P[:,i],i],2) + np.power(Y[P[:,i+1],i+1]-Y[P[:,i],i],2),0.5)
+    return np.max(distance)
 
-def avg_distance(X,Y,P):
-    pass
+def average_distance(X,Y,P):
+    for i in range(np.shape(X)[1]-1):
+        distance = np.power(np.power(X[P[:,i+1],i+1]-X[P[:,i],i],2) + np.power(Y[P[:,i+1],i+1]-Y[P[:,i],i],2),0.5)
+    return np.average(distance)

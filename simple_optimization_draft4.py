@@ -17,8 +17,9 @@ import metrics
 num_dancers = 28
 num_formations = 3
 
-sf1 = 1
-sf2 = 0 # controls how important the distance is in the cost
+sf1 = 1 # weighting of the intersection
+sf2 = 0 # weighting of the maximum distance
+sf3 = 0 # weighting to the average distance
 
 start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
@@ -161,14 +162,24 @@ for formation in range(num_formations-1):
             num_intersection_swapped  = np.sum(arr_intersection_swapped,axis=0)
             temp = num_intersection_swapped.copy()
             
-            cost_original = sf1 * num_intersection_original + sf2 * np.max(geo.euclidean_distance(X[P[:,i],i],
-                                                                                          X[P[:,i+1],i+1],
-                                                                                          Y[P[:,i],i],
-                                                                                          Y[P[:,i+1],i+1]))
-            cost_swapped  = sf1 * num_intersection_swapped  + sf2 * np.max(geo.euclidean_distance(X_initial_swapped,
-                                                                                          X_final_swapped,
-                                                                                          Y_initial_swapped,
-                                                                                          Y_final_swapped),axis=0)
+            cost_original = sf1 * num_intersection_original + \
+                            sf2 * np.max(geo.euclidean_distance(X[P[:,i],i],
+                                                                X[P[:,i+1],i+1],
+                                                                Y[P[:,i],i],
+                                                                Y[P[:,i+1],i+1])) + \
+                            sf3 * np.average(geo.euclidean_distance(X[P[:,i],i],
+                                                                    X[P[:,i+1],i+1],
+                                                                    Y[P[:,i],i],
+                                                                    Y[P[:,i+1],i+1]))
+            cost_swapped  = sf1 * num_intersection_swapped  + \
+                            sf2 * np.max(geo.euclidean_distance(X_initial_swapped,
+                                                                X_final_swapped,
+                                                                Y_initial_swapped,
+                                                                Y_final_swapped),axis=0) + \
+                            sf3 * np.average(geo.euclidean_distance(X_initial_swapped,
+                                                                    X_final_swapped,
+                                                                    Y_initial_swapped,
+                                                                    Y_final_swapped),axis=0)
                   
             # print("original distances")
             # print(geo.euclidean_distance(X[:,i],X[:,i+1],Y[:,i],Y[:,i+1]))
@@ -195,11 +206,12 @@ for formation in range(num_formations-1):
             
         print("formation",formation, "iteration", iteration, "intersections count", 
               metrics.num_intersections(X[:,i:i+2],Y[:,i:i+2],P[:,i:i+2]),
-              "max distance", metrics.max_distance(X[:,i:i+2], Y[:,i:i+2], P[:,i:i+2]))
+              "max distance", metrics.max_distance(X[:,i:i+2], Y[:,i:i+2], P[:,i:i+2]),
+              "average distance", metrics.average_distance(X[:,i:i+2], Y[:,i:i+2], P[:,i:i+2]))
     geo.plot_movement(X_raw[:,i], X_raw[:,i+1], Y_raw[:,i], Y_raw[:,i+1], P[:,i], P[:,i+1],
                       display_numbers=False,plot_title="formation "+str(i)+" to "+str(i+1))
 end_time = time.time()
 print("Optimization Completed. Time elapsed: ",end_time-start_time)
 
 #%%
-geo.animate_movement(X_raw,Y_raw,P,filename="5-31-24_animations/no_norm_COM, ntsct, symmtrc formations, late stop.gif")
+geo.animate_movement(X_raw,Y_raw,P,filename="5-31-24_animations/no_norm_COM, avgdist, symmtrc formations, late stop.gif")

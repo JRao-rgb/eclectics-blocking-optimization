@@ -51,7 +51,7 @@ def lines_and_windows(num_dancers=28,
     x = np.concatenate([x[0:f],x[f+offset_idx:f+offset_idx+l]])
     y = np.concatenate([y[0:f],y[f+offset_idx:f+offset_idx+l]])
   
-    return x, y
+    return x.flatten(), y.flatten()
 
 def pyramid(num_dancers=28,
             base=10,
@@ -104,8 +104,8 @@ def pyramid(num_dancers=28,
     x = np.concatenate([x[0:f],x[f+offset_idx:f+offset_idx+l]])
     y = np.concatenate([y[0:f],y[f+offset_idx:f+offset_idx+l]])
     
-    # return the arryas, truncated based on num_dancers
-    return x, y
+    # return the arryas, flattening again due to numpy datatypes
+    return x.flatten(), y.flatten()
 
 def grid(num_dancers=28,
         x_size=10,
@@ -139,7 +139,7 @@ def grid(num_dancers=28,
     y = np.concatenate([y[0:f],y[f+offset_idx:f+offset_idx+l]])
 
     # flatten just converts a 2D array into a 1D array -- it "flattens" it hehe    
-    return x, y
+    return x.flatten(), y.flatten()
 
 def horizontal_line(num_dancers=28,
                     length=10,

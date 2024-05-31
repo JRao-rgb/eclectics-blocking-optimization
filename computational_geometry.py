@@ -33,9 +33,13 @@ def intersect(l1p1x,l1p1y,l1p2x,l1p2y,l2p1x,l2p1y,l2p2x,l2p2y):
         
     return np.int8(intersect_arr)
 
-def plot_movement(X_initial,X_final,Y_initial,Y_final,indices_initial,indices_final):
+def plot_movement(X_initial,X_final,Y_initial,Y_final,indices_initial,indices_final,
+                  display_numbers=False,plot_title="movement"):
+    '''
+    This just takes in the positions and plots the movement paths between them.
+    '''
     plt.ion()
-    plt.figure()
+    fig, ax = plt.subplots()
     plt.scatter(X_initial,Y_initial)
     plt.scatter(X_final,Y_final)
     for i in range(np.shape(X_initial)[0]):
@@ -44,7 +48,14 @@ def plot_movement(X_initial,X_final,Y_initial,Y_final,indices_initial,indices_fi
         dx = X_final[indices_final[i]] - x
         dy = Y_final[indices_final[i]] - y
         plt.arrow(x,y,dx,dy)
-    plt.title("movement")
+    if display_numbers:
+        for i in range(np.shape(X_initial)[0]):
+            plt.text(X_initial[i],Y_initial[i],indices_initial[i])
+            plt.text(X_final[i],Y_final[i],indices_final[i])
+    ax.set_aspect('equal','box')
+    plt.xlim(-10,10)
+    plt.ylim(-5,5)
+    plt.title(plot_title)
         
 def ccw2(A,B,C):
     return (C[:,1]-A[:,1])*(B[:,0]-A[:,0]) > (B[:,1]-A[:,1])*(C[:,0]-A[:,0])
