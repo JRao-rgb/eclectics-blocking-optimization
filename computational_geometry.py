@@ -68,7 +68,7 @@ def intersect2(l1p1,l1p2,l2p1,l2p2):
     
 def animate_movement(X,Y,P,
                      frames_per_transition=10,frames_per_formation=10,fps = 15,
-                     file_name="animated_formations.gif",writer="pillow"):
+                     filename="animated_formations.gif",writer="pillow"):
     fpf = frames_per_formation
     fpt = frames_per_transition
     
@@ -115,7 +115,20 @@ def animate_movement(X,Y,P,
     ani = animation.ArtistAnimation(fig=fig, artists=frames, interval=1/fps*1000, blit=True, repeat_delay=1000)
     
     # Save the animation as a video
-    ani.save(file_name, writer=writer)
+    ani.save(filename, writer=writer)
+
+def normalize_formations(X,Y):
+    X_normalized = np.zeros(np.shape(X))
+    Y_normalized = np.zeros(np.shape(Y))
+    
+    for i in range(np.shape(X)[1]):
+        X_normalized[:,i] = (X[:,i] - np.average(X[:,i])) # /(np.max(X[:,i])-np.min(X[:,i]))
+        Y_normalized[:,i] = (Y[:,i] - np.average(Y[:,i])) # /(np.max(Y[:,i])-np.min(Y[:,i]))
+        
+    return X_normalized, Y_normalized
+
+def euclidean_distance(X1,X2,Y1,Y2):
+    return np.power(np.power(X1-X2,2) + np.power(Y1-Y2,2),0.5)
 
 #%% animating the formations as each dancer moves from one to another
 

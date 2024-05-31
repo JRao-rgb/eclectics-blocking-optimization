@@ -12,9 +12,13 @@ import time
 os.chdir("C:\\Users\\jraos\\OneDrive - Stanford\\Documents\\Stanford\\EC\\Eclectics Blocking Optimization\\eclectics-blocking-optimization")
 import formations
 import computational_geometry as geo
+import metrics
 
 num_dancers = 30
 num_formations = 3
+
+sf1 = 1
+sf2 = 0 # controls how important the distance is in the cost
 
 start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
@@ -52,7 +56,7 @@ for formation in range(num_formations-1):
     i = formation
     # initialize a permutation for each formation based on Euclidean distance
     X, Y = geo.normalize_formations(X_raw,Y_raw)
-    
+    X, Y = X_raw,Y_raw
     idx_available = np.ones((1,num_dancers))
     for dancer in range(num_dancers):
         Euclidean_distance = (np.power(X[P[dancer,i],i]-np.multiply(X[:,i+1],idx_available),2) +\
@@ -84,6 +88,12 @@ for formation in range(num_formations-1):
             l_p2_x_swapped =  np.full((num_dancers,num_dancers-dancer1-1),0,dtype=np.float16)
             l_p2_y_swapped =  np.full((num_dancers,num_dancers-dancer1-1),0,dtype=np.float16)
             
+            # arrays to help with the Euclidean distance calculation
+            X_initial_swapped = np.tile(X[P[p,i],i][...,None],num_dancers-dancer1-1)
+            Y_initial_swapped = np.tile(Y[P[p,i],i][...,None],num_dancers-dancer1-1)
+            X_final_swapped   = np.tile(X[P[p,i+1],i+1][...,None],num_dancers-dancer1-1)
+            Y_final_swapped   = np.tile(Y[P[p,i+1],i+1][...,None],num_dancers-dancer1-1)
+            
             for dancer2 in range(dancer1+1,num_dancers):
                 l = current_iter_permutation[dancer2]
                 k_p2_x_original[:,dancer2-dancer1-1] = np.transpose(np.tile(X[P[k,i+1],i+1],num_dancers))
@@ -94,7 +104,12 @@ for formation in range(num_formations-1):
                 l_p2_y_original[:,dancer2-dancer1-1] = np.transpose(np.tile(Y[P[l,i+1],i+1],num_dancers))
                 l_p2_x_swapped[:,dancer2-dancer1-1]  = np.transpose(np.tile(X[P[k,i+1],i+1],num_dancers))
                 l_p2_y_swapped[:,dancer2-dancer1-1]  = np.transpose(np.tile(Y[P[k,i+1],i+1],num_dancers))
-                                
+                
+                X_final_swapped[k,dancer2-dancer1-1] = X[P[l,i+1],i+1]
+                Y_final_swapped[k,dancer2-dancer1-1] = Y[P[l,i+1],i+1]
+                X_final_swapped[l,dancer2-dancer1-1] = X[P[k,i+1],i+1]
+                Y_final_swapped[l,dancer2-dancer1-1] = Y[P[k,i+1],i+1]
+            
             # performing the intersection calculations
             arr_intersection_original = geo.intersect(k_p1_x, k_p1_y, 
                                                       k_p2_x_original, k_p2_y_original, 
@@ -117,21 +132,31 @@ for formation in range(num_formations-1):
             num_intersection_swapped  = np.sum(arr_intersection_swapped,axis=0)
             temp = num_intersection_swapped.copy()
             
-            if all(num_intersection_original <= num_intersection_swapped):
+            cost_original = sf1 * num_intersection_original + sf2 * np.max(geo.euclidean_distance(X[:,i],
+                                                                                          X[:,i+1],
+                                                                                          Y[:,i],
+                                                                                          Y[:,i+1]))
+            cost_swapped  = sf1 * num_intersection_swapped  + sf2 * np.max(geo.euclidean_distance(X_initial_swapped,
+                                                                                          X_final_swapped,
+                                                                                          Y_initial_swapped,
+                                                                                          Y_final_swapped),axis=0)
+                        
+            if all(cost_original <= cost_swapped):
                 ideal_swap_idx = -1
             else:
                 # if np.max(num_intersection_original - num_intersection_swapped) <= 0: continue
-                num_intersection_swapped[num_intersection_original <= num_intersection_swapped]=1000
-                ideal_swap_idx = np.argmin(num_intersection_swapped)
+                cost_swapped[cost_original <= cost_swapped]=1000
+                ideal_swap_idx = np.argmin(cost_swapped)
             
             # print(p[dancer1+ideal_swap_idx+1], end = ' ')
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
             P[k,i+1], P[p[dancer1+ideal_swap_idx+1],i+1] = P[p[dancer1+ideal_swap_idx+1],i+1], P[k,i+1]
             # geo.plot_movement(X[:,0], X[:,1], Y[:,0], Y[:,1], P[:,0], P[:,1])
             
+        print(metrics.num_intersections(X,Y,P))
     geo.plot_movement(X_raw[:,i], X_raw[:,i+1], Y_raw[:,i], Y_raw[:,i+1], P[:,i], P[:,i+1])
 end_time = time.time()
 print("Optimization Completed. Time elapsed: ",end_time-start_time)
 
 #%%
-geo.animate_movement(X_raw,Y_raw,P,filename="with normalized COM.gif")
+geo.animate_movement(X_raw,Y_raw,P,filename="no normalized COM, intersection.gif")
