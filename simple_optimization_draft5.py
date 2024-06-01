@@ -14,12 +14,12 @@ import formations
 import computational_geometry as geo
 import metrics
 
-num_dancers = 28
-num_formations = 3
+num_dancers = 9
+num_formations = 2
 
-sf1 = 1 # weighting of the intersection
+sf1 = 0 # weighting of the intersection
 sf2 = 0 # weighting of the maximum distance
-sf3 = 0 # weighting to the average distance
+sf3 = 1 # weighting to the average distance
 
 start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
@@ -27,7 +27,7 @@ np.random.seed(42) # set the seed that we will use so the tests are repeatable
 X_raw = np.zeros((num_dancers,num_formations),dtype=np.float16)
 Y_raw = np.zeros((num_dancers,num_formations),dtype=np.float16)
 
-max_iteration = np.int16(np.ceil(num_dancers/3)) # number of maximum iterations to go over one permutation
+max_iteration = np.int16(np.ceil(num_dancers/6)) # number of maximum iterations to go over one permutation
 
 # begin the optimization procedure. Let'd o one optimmization procedure first.
 # let's start by defining the variables we need for this.
@@ -37,14 +37,20 @@ P = np.full((num_dancers,num_formations),0,dtype=np.int8) # permutation array. T
 C = np.full((num_dancers,num_formations),-1,dtype=np.int8) # constraint array. This array
 # specifies which dancer assignments are multable and immutable. If -1, it means
 # there is no constraint for the circle at that x[i,j], y[i,j]
-M = np.full(num_dancers, np.NAN) # mapping array that goes from physical location mappings
-# in the P array to actual dancer numbers specified in the C array
+M = np.full(num_dancers, -1,dtype=np.int8) # mapping array that goes from physical location mappings
+# in the P array to actual dancer numbers specified in the C array. M[positionID] = dancerID
+M_inv = np.full(num_dancers, -1,dtype=np.int8) # mapping that's the inverse of M:
+# you give it a dancer ID and it tells you the posiiton ID that it's mapped to. M_inv[dancerID] = positionID
 
 # ======================= suitable break point ============================
 
-X_raw[:,0], Y_raw[:,0] = formations.lines_and_windows(num_dancers = num_dancers)
-X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers)
-X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
+X_raw[:,0], Y_raw[:,0] = formations.pyramid(num_dancers = num_dancers, base = 5)
+X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers, base = 5)
+# X_raw[:,2], Y_raw[:,2] = formations.pyramid(num_dancers = num_dancers)
+
+C[0,0] = 2; C[2,0] = 3; C[4,0] = 1; C[5,0] = 4; C[6,0] = 7;
+C[2,1] = 2; C[0,1] = 1; C[5,1] = 6; C[7,1] = 8; C[3,1] = 4;
+# C[0,0] = 2; C[0,1] = 1
 
 # # debugging formations
 # X_raw[:,0], Y_raw[:,0] = formations.grid(num_dancers = num_dancers)
@@ -52,29 +58,85 @@ X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
 
 # initialize the permutation matrix
 P[:,] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
+# P[0,0], P[1,0] = P[1,0], P[0,0] # for debugging the construction of the A matrix
 P[:,1] = np.random.permutation(num_dancers)
 # P[:,1] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
 # P[:,1] = [3,4,2,1,0]
 P_ = np.copy(P)
 
+# initializing any constraints that are present in formation 0 (the starting formation):
+constrained_coordinates_mask = C[:,0]!=-1                    # indices of the coordinates that are constrained (i.e. already have dancers assigned)
+constrained_dancerIDs        = C[constrained_coordinates_mask,0] # dancerIDs of the circles that are constrained (i.e. have specified dancers)
+constrained_positionIDs      = P[constrained_coordinates_mask,0] # positionIDs of the circles that are constrained
+M[constrained_positionIDs]   = constrained_dancerIDs         # initial mapping from positionIDs to dancerIDs
+M_inv[constrained_dancerIDs] = constrained_positionIDs       # initial mapping from dancerIDs to positionIDs
+
+# pre-allocate arrays that are needed to keep track of which dancers can go where. Call this A.
+A                            = np.full((num_dancers,num_dancers),False)
+
 # loop over formations-1
 for formation in range(num_formations-1):
     i = formation
+    
+    # next, fill out values of A according to known values of M, C
+    A = np.full((num_dancers,num_dancers),False)
+    for c1, p in enumerate(P[:,i]):
+        
+        for c2, dancerID in enumerate(C[:,i+1]):
+            # check if p has somewhere it needs to be
+            if M[p] != -1:
+                does_p_have_somewhere_it_needs_to_be = np.any(C[:,i+1] == M[p])
+            else:
+                does_p_have_somewhere_it_needs_to_be = False
+            
+            # check if someone else is supposed to be at c2
+            if dancerID != -1: # if a constraint exists:
+                if M[p] != -1 and dancerID == M[p]:
+                    is_someone_else_supposed_to_be_here = False
+                elif M[p] != -1 and dancerID != M[p]:
+                    is_someone_else_supposed_to_be_here = True
+                elif M_inv[dancerID] != -1 and p == M_inv[dancerID]:
+                    is_someone_else_supposed_to_be_here = False
+                elif M_inv[dancerID] != -1 and p != M_inv[dancerID]:
+                    is_someone_else_supposed_to_be_here = True
+                elif M_inv[dancerID] == -1:
+                    is_someone_else_supposed_to_be_here = False
+            else:
+                is_someone_else_supposed_to_be_here = False
+               
+            # check to see if this is where p is supposed to end up
+            if M[p] != -1 and M[p] == dancerID:
+                p_is_supposed_to_end_up_here = True
+            else:
+                p_is_supposed_to_end_up_here = False
+                
+            print(c1,p,c2,dancerID,does_p_have_somewhere_it_needs_to_be,is_someone_else_supposed_to_be_here,p_is_supposed_to_end_up_here)
+                
+            A[p, c2] = (does_p_have_somewhere_it_needs_to_be == False and \
+                        is_someone_else_supposed_to_be_here == False) or \
+                        p_is_supposed_to_end_up_here == True
+            
     # initialize a permutation for each formation based on Euclidean distance
-    X, Y = geo.normalize_formations(X_raw,Y_raw)
+    X, Y = geo.normalize_formations(X_raw,Y_raw) # depends on if we want to normalize the formations before optimization...
     X, Y = X_raw,Y_raw
     idx_available = np.ones((1,num_dancers))
-    for dancer in range(num_dancers):
-        Euclidean_distance = (np.power(X[P[dancer,i],i]-np.multiply(X[:,i+1],idx_available),2) +\
-                              np.power(Y[P[dancer,i],i]-np.multiply(Y[:,i+1],idx_available),2))
+    
+    for c1, p in enumerate(P[:,i]):
+        print(dancer)
+        Euclidean_distance = (np.power(X[dancer,i]-np.multiply(X[:,i+1],idx_available),2) +\
+                              np.power(Y[dancer,i]-np.multiply(Y[:,i+1],idx_available),2))
         idx = np.nanargmin(Euclidean_distance)
+        print("calculated dist",Euclidean_distance)
+        print("dancer",dancer,"goes to",idx)
         P[dancer,i+1] = idx
+        print(P)
         idx_available[:,idx] = np.array([np.nan])
+    print(P)
     # loop over iterations per formation
     for iteration in range(max_iteration):
         # randomize the order at which we scan through the dancers here
         current_iter_permutation = np.random.permutation(num_dancers)
-        current_iter_permutation = np.linspace(0,num_dancers-1,num_dancers,dtype=np.int8)
+        # current_iter_permutation = np.linspace(0,num_dancers-1,num_dancers,dtype=np.int8)
         p = current_iter_permutation        
         # loop over each dancer-1 (since need at least 2 dancers to make a switch)
         for dancer1 in range(num_dancers-1): # range(num_dancers-1)
@@ -101,6 +163,7 @@ for formation in range(num_formations-1):
             X_final_swapped   = np.tile(X[P[p,i+1],i+1][...,None],num_dancers-dancer1-1)
             Y_final_swapped   = np.tile(Y[P[p,i+1],i+1][...,None],num_dancers-dancer1-1)
             
+            # ======================== for debugging ==========================
             # print(P)
             # print(X_final_swapped)
             # geo.plot_movement(X_initial_swapped[:,0], 
@@ -111,6 +174,7 @@ for formation in range(num_formations-1):
             #                   np.linspace(0,num_dancers-dancer1-1,num_dancers-dancer1,dtype=np.int8),
             #                   display_numbers=True,
             #                   plot_title="original plot")
+            # ======================== for debugging ==========================
             
             for dancer2 in range(dancer1+1,num_dancers):
                 l = current_iter_permutation[dancer2]
@@ -131,6 +195,7 @@ for formation in range(num_formations-1):
                 X_final_swapped[l,idx] = X[P[k,i+1],i+1]
                 Y_final_swapped[l,idx] = Y[P[k,i+1],i+1]
                 
+                # ======================== for debugging ==========================
                 # geo.plot_movement(X_initial_swapped[:,idx], 
                 #                   X_final_swapped[:,idx], 
                 #                   Y_initial_swapped[:,idx], 
@@ -139,6 +204,7 @@ for formation in range(num_formations-1):
                 #                   np.linspace(0,num_dancers-dancer1-1,num_dancers-dancer1,dtype=np.int8),
                 #                   display_numbers=True,
                 #                   plot_title="swapping "+str(l)+" with "+str(k))
+                # ======================== for debugging ==========================
             
             # performing the intersection calculations
             arr_intersection_original = geo.intersect(k_p1_x, k_p1_y, 
@@ -181,6 +247,7 @@ for formation in range(num_formations-1):
                                                                     Y_initial_swapped,
                                                                     Y_final_swapped),axis=0)
                   
+            # ======================== for debugging ==========================
             # print("original distances")
             # print(geo.euclidean_distance(X[:,i],X[:,i+1],Y[:,i],Y[:,i+1]))
             # print("calculated max dist after swapping")
@@ -189,6 +256,7 @@ for formation in range(num_formations-1):
             # print(cost_original)
             # print("swapped cost")
             # print(cost_swapped)
+            # ======================== for debugging ==========================
             
             if all(cost_original <= cost_swapped):
                 ideal_swap_idx = -1
