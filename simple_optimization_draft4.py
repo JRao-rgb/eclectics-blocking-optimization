@@ -17,9 +17,9 @@ import metrics
 num_dancers = 28
 num_formations = 3
 
-sf1 = 1 # weighting of the intersection
-sf2 = 0 # weighting of the maximum distance
-sf3 = 0 # weighting to the average distance
+sf1 = 0 # weighting of the intersection
+sf2 = 1 # weighting of the maximum distance
+sf3 = 1 # weighting to the average distance
 
 start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
@@ -214,4 +214,4 @@ end_time = time.time()
 print("Optimization Completed. Time elapsed: ",end_time-start_time)
 
 #%%
-geo.animate_movement(X_raw,Y_raw,P,filename="5-31-24_animations/no_norm_COM, avgdist, symmtrc formations, late stop.gif")
+geo.animate_movement(X_raw,Y_raw,P,filename="5-31-24_animations/no_norm_COM, maxdist+avgdist, symmtrc formations, late stop.gif")
