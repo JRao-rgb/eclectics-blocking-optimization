@@ -17,7 +17,7 @@ import metrics
 num_dancers = 28
 num_formations = 3
 
-sf1 = 0 # weighting of the intersection
+sf1 = 1 # weighting of the intersection
 sf2 = 1 # weighting of the maximum distance
 sf3 = 1 # weighting to the average distance
 
@@ -52,10 +52,6 @@ X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
 
 # initialize the permutation matrix
 P[:,] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
-P[:,1] = np.random.permutation(num_dancers)
-# P[:,1] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
-# P[:,1] = [3,4,2,1,0]
-P_ = np.copy(P)
 
 # loop over formations-1
 for formation in range(num_formations-1):

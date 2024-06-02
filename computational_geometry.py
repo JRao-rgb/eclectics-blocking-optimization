@@ -50,8 +50,8 @@ def plot_movement(X_initial,X_final,Y_initial,Y_final,indices_initial,indices_fi
         plt.arrow(x,y,dx,dy)
     if display_numbers:
         for i in range(np.shape(X_initial)[0]):
-            plt.text(X_initial[i],Y_initial[i],indices_initial[i])
-            plt.text(X_final[i],Y_final[i],indices_final[i])
+            plt.text(X_initial[i],Y_initial[i],i)
+            plt.text(X_final[i],Y_final[i],i)
     ax.set_aspect('equal','box')
     plt.xlim(-10,10)
     plt.ylim(-5,5)
