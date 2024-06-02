@@ -42,10 +42,6 @@ M = np.full(num_dancers, np.NAN) # mapping array that goes from physical locatio
 
 # ======================= suitable break point ============================
 
-X_raw[:,0], Y_raw[:,0] = formations.lines_and_windows(num_dancers = num_dancers)
-X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers)
-X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
-
 # # debugging formations
 # X_raw[:,0], Y_raw[:,0] = formations.grid(num_dancers = num_dancers)
 # X_raw[:,1], Y_raw[:,1] = formations.grid(num_dancers = num_dancers,offset = [0,1])

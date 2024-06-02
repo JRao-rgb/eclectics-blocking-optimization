@@ -77,7 +77,7 @@ def intersect2(l1p1,l1p2,l2p1,l2p2):
         
     return intersect_arr
     
-def animate_movement(X,Y,P,
+def animate_movement(X,Y,P_inv,
                      frames_per_transition=10,frames_per_formation=10,fps = 15,
                      filename="animated_formations.gif",writer="pillow"):
     fpf = frames_per_formation
@@ -91,21 +91,21 @@ def animate_movement(X,Y,P,
     for i in range(np.shape(X)[1]-1):
         # create the initial freeze frames
         for k in range(fpf):
-            X_[:,i*(fpf+fpt)+k] = X[P[:,i],i]
-            Y_[:,i*(fpf+fpt)+k] = Y[P[:,i],i]
+            X_[:,i*(fpf+fpt)+k] = X[P_inv[:,i],i]
+            Y_[:,i*(fpf+fpt)+k] = Y[P_inv[:,i],i]
             
         for j in range(fpt):
-            x1 = X[P[:,i],i]
-            x2 = X[P[:,i+1],i+1]
-            y1 = Y[P[:,i],i]
-            y2 = Y[P[:,i+1],i+1]
+            x1 = X[P_inv[:,i],i]
+            x2 = X[P_inv[:,i+1],i+1]
+            y1 = Y[P_inv[:,i],i]
+            y2 = Y[P_inv[:,i+1],i+1]
 
             X_[:,i*(fpf+fpt)+fpf+j] = x1 + j * (x2-x1)/fpt
             Y_[:,i*(fpf+fpt)+fpf+j] = y1 + j * (y2-y1)/fpt
     
     for k in range(fpf):
-        X_[:,np.shape(X)[1]*(fpf+fpt)-fpf-1-k] = X[P[:,-1],-1]
-        Y_[:,np.shape(X)[1]*(fpf+fpt)-fpf-1-k] = Y[P[:,-1],-1]
+        X_[:,np.shape(X)[1]*(fpf+fpt)-fpf-1-k] = X[P_inv[:,-1],-1]
+        Y_[:,np.shape(X)[1]*(fpf+fpt)-fpf-1-k] = Y[P_inv[:,-1],-1]
     
     # Create a figure
     plt.ioff()

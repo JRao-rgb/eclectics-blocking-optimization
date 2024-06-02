@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-num_dancers = 5
+num_dancers = 4
 num_formations = 2
 
 sf1 = 1  # weighting of the intersection
@@ -73,15 +73,6 @@ P_inv[:, ] = np.linspace(0, num_dancers-1, num_dancers)[..., None]
 P_ = np.copy(P)
 C[0,0] = 2
 C[0,1] = 1
-
-X = np.transpose(np.array([[-2,-1,0,-1,-2], [-2,-1,0,-1,-2]]))
-Y = np.transpose(np.array([[-1,-1,-1,-1,-1], [0,0,0,0,0]]))
-C = np.transpose(np.array([[-1,-1,-1,-1,-1], [-1,-1,-1,-1,-1]]))
-P_init = np.full((num_dancers, num_formations), 0, dtype=np.int8)
-P_init[:,] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
-
-M_expected = np.array([-1,-1,-1,-1,-1])
-P_expected = np.transpose(np.array([[0,1,2,3,4], [0,1,2,3,4]]))
 
 # initializing any constraints that are present in formation 0 (the starting formation):
 # indices of the coordinates that are constrained (i.e. already have dancers assigned)
