@@ -15,11 +15,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-num_dancers = 5
-num_formations = 2
+num_dancers = 28
+num_formations = 3
 
 sf1 = 1  # weighting of the intersection
-sf2 = 1  # weighting of the maximum distance
+sf2 = 1 # weighting of the maximum distance
 sf3 = 1  # weighting to the average distance
 
 start_time = time.time()
@@ -27,9 +27,12 @@ np.random.seed(42)  # set the seed that we will use so the tests are repeatable
 
 X_raw = np.zeros((num_dancers, num_formations), dtype=np.float16)
 Y_raw = np.zeros((num_dancers, num_formations), dtype=np.float16)
+X_raw[:,0], Y_raw[:,0] = formations.lines_and_windows(num_dancers = num_dancers)
+X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers)
+X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
 
 # number of maximum iterations to go over one permutation
-max_iteration = np.int16(np.ceil(num_dancers/6))
+max_iteration = np.int16(np.ceil(num_dancers/3))
 
 # numbers that deal with the guts of the algorithm
 huge_number = 1000 # a huge number to facilitate comparisons
@@ -59,29 +62,25 @@ M_inv = np.full(num_dancers, -1, dtype=np.int8)
 # X_raw[:, 1], Y_raw[:, 1] = formations.pyramid(num_dancers=num_dancers, base=5)
 # # X_raw[:,2], Y_raw[:,2] = formations.pyramid(num_dancers = num_dancers)
 
-X_raw[:,0], Y_raw[:,0] = formations.grid(num_dancers = num_dancers)
-# X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers)
-X_raw[:,1], Y_raw[:,1] = formations.grid(num_dancers = num_dancers, offset=[0,1])
+# # -------------------------------- DEBUGGING FORMATION ------------------------
+# num_dancers = 6
+# num_formations = 2
 
-# # debugging formations
+# X_raw = np.zeros((num_dancers, num_formations), dtype=np.float16)
+# Y_raw = np.zeros((num_dancers, num_formations), dtype=np.float16)
 # X_raw[:,0], Y_raw[:,0] = formations.grid(num_dancers = num_dancers)
-# X_raw[:,1], Y_raw[:,1] = formations.grid(num_dancers = num_dancers,offset = [0,1])
+# X_raw[:,1], Y_raw[:,1] = formations.grid(num_dancers = num_dancers, offset=[0,1])
+# C = np.full((num_dancers, num_formations), -1, dtype=np.int8)
+# P = np.full((num_dancers, num_formations), 0, dtype=np.int8)
+# P_inv = np.full((num_dancers,num_formations), 0, dtype=np.int8)
+# M = np.full(num_dancers, -1, dtype=np.int8)
+# M_inv = np.full(num_dancers, -1, dtype=np.int8)
+# # -------------------------------- DEBUGGING FORMATION ------------------------
 
 # initialize the permutation matrix
 P[:,]   = np.linspace(0, num_dancers-1, num_dancers)[..., None]
 P_inv[:, ] = np.linspace(0, num_dancers-1, num_dancers)[..., None]
 P_ = np.copy(P)
-C[0,0] = 2
-C[0,1] = 1
-
-X = np.transpose(np.array([[-2,-1,0,-1,-2], [-2,-1,0,-1,-2]]))
-Y = np.transpose(np.array([[-1,-1,-1,-1,-1], [0,0,0,0,0]]))
-C = np.transpose(np.array([[-1,-1,-1,-1,-1], [-1,-1,-1,-1,-1]]))
-P_init = np.full((num_dancers, num_formations), 0, dtype=np.int8)
-P_init[:,] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
-
-M_expected = np.array([-1,-1,-1,-1,-1])
-P_expected = np.transpose(np.array([[0,1,2,3,4], [0,1,2,3,4]]))
 
 # initializing any constraints that are present in formation 0 (the starting formation):
 # indices of the coordinates that are constrained (i.e. already have dancers assigned)
@@ -196,7 +195,7 @@ for formation in range(num_formations-1):
         A_dynamic = A.copy()
         
         # loop over each number of available positions:
-        for number_of_originally_available_coordinateIDs in range(1,num_dancers+1): # allowed positions goes from 1 to num_dancers, 
+        for number_of_originally_available_coordinateIDs in range(num_dancers,num_dancers+1): # allowed positions goes from 1 to num_dancers, 
         # so we must alter this for-loop accordingly
         
             # looping over each positionID:
@@ -297,7 +296,7 @@ for formation in range(num_formations-1):
                     X_final[:, idx] = X[P_inv_swap, i+1]
                     Y_final[:, idx] = Y[P_inv_swap, i+1]
                     
-                    # ======================== for debugging ==========================
+                    # # ======================== for debugging ==========================
                     # geo.plot_movement(X_initial[:,idx],
                     #                   X_final[:,idx],
                     #                   Y_initial[:,idx],
@@ -306,7 +305,7 @@ for formation in range(num_formations-1):
                     #                   np.linspace(0,num_dancers-1,num_dancers,dtype=np.int8),
                     #                   display_numbers=True,
                     #                   plot_title="changing "+str(previously_assigned_coordinateID)+" with "+str(coordinateID))
-                    # ======================== for debugging ==========================
+                    # # ======================== for debugging ==========================
                     
                     idx += 1
     
@@ -315,18 +314,18 @@ for formation in range(num_formations-1):
                                                   positionID_to_be_assigned_path_start_y,
                                                   positionID_to_be_assigned_path_end_x, 
                                                   positionID_to_be_assigned_path_end_y,
-                                                  X[:, i][...,None], 
-                                                  Y[:, i][..., None],
-                                                  X[:, i+1][..., None], 
-                                                  Y[:, i+1][..., None]) + \
+                                                  X_initial, 
+                                                  Y_initial,
+                                                  X_final, 
+                                                  Y_final) + \
                                     geo.intersect(positionID_that_got_replaced_path_start_x, 
                                                   positionID_that_got_replaced_path_start_y,
                                                   positionID_that_got_replaced_path_end_x, 
                                                   positionID_that_got_replaced_path_end_y,
-                                                  X[:, i][..., None], 
-                                                  Y[:, i][..., None],
-                                                  X[:, i+1][..., None], 
-                                                  Y[:, i+1][..., None])
+                                                  X_initial, 
+                                                  Y_initial,
+                                                  X_final, 
+                                                  Y_final)
     
                 num_intersection = np.sum(arr_intersection, axis=0)
     
@@ -347,14 +346,32 @@ for formation in range(num_formations-1):
                 # print(X_initial)
                 # print("X_fin   ")
                 # print(X_final)
-                # print("Euclidean Distance", geo.euclidean_distance(X_initial,
-                #                                         X_final,
-                #                                         Y_initial,
-                #                                         Y_final))
-                # print("averaged dist", np.average(geo.euclidean_distance(X_initial,
-                #                                         X_final,
-                #                                         Y_initial,
-                #                                         Y_final)))
+                # # print("Euclidean Distance", geo.euclidean_distance(X_initial,
+                # #                                         X_final,
+                # #                                         Y_initial,
+                # #                                         Y_final))
+                # # print("averaged dist", np.average(geo.euclidean_distance(X_initial,
+                # #                                         X_final,
+                # #                                         Y_initial,
+                # #                                         Y_final)))
+                # print("number of intersections of Ca_f0",previously_assigned_coordinateID,"to Ci")
+                # print(geo.intersect(positionID_to_be_assigned_path_start_x, 
+                #                                   positionID_to_be_assigned_path_start_y,
+                #                                   positionID_to_be_assigned_path_end_x, 
+                #                                   positionID_to_be_assigned_path_end_y,
+                #                                   X_initial, 
+                #                                   Y_initial,
+                #                                   X_final, 
+                #                                   Y_final))
+                # print("number of intersections of Ci_f0 going to Ca")
+                # print(geo.intersect(positionID_that_got_replaced_path_start_x, 
+                #               positionID_that_got_replaced_path_start_y,
+                #               positionID_that_got_replaced_path_end_x, 
+                #               positionID_that_got_replaced_path_end_y,
+                #               X_initial, 
+                #               Y_initial,
+                #               X_final, 
+                #               Y_final))
                 # print("Cost   ",cost)
                 
                 ideal_assignment_idx = np.argmin(cost) # this is in terms of unknown IDs!!!

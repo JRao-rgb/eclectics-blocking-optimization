@@ -47,7 +47,7 @@ P_expected = np.transpose(np.array([[0,1,2,3,4], [0,1,2,3,4]]))
 try:
     for i in range(num_repeats):
         # P_init[:,1] = np.random.permutation(num_dancers)
-        P, P_inv, M, M_inv = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
+        P, P_inv, M, M_inv, cost = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
         assert(np.all(np.equal(M,M_expected)))
         assert(np.all(np.equal(P,P_expected)))
     print("test 1 (No constraints in f0 or f1) with", num_repeats,"repeats passed!")
@@ -68,7 +68,7 @@ P_expected = np.transpose(np.array([[0,1,2,3,4], [0,1,2,3,4]]))
 try:
     for i in range(num_repeats):
         # P_init[:,1] = np.random.permutation(num_dancers)
-        P, P_inv, M, M_inv = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
+        P, P_inv, M, M_inv, cost = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
         assert(np.all(np.equal(M,M_expected)))
         assert(np.all(np.equal(P,P_expected)))
     print("test 2 (Single constraint in f0; no constraints in f1) with", num_repeats,"repeats passed!")
@@ -89,7 +89,7 @@ P_expected = np.transpose(np.array([[0,1,2,3,4], [0,1,2,3,4]]))
 try:
     for i in range(num_repeats):
         # P_init[:,1] = np.random.permutation(num_dancers)
-        P, P_inv, M, M_inv = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
+        P, P_inv, M, M_inv, cost = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
         assert(np.all(np.equal(M,M_expected)))
         assert(np.all(np.equal(P,P_expected)))
     print("test 3 (Single constraint in f0, single constraint in f1 (different dancerID, different coordinateID)) with", num_repeats,"repeats passed!")
@@ -110,7 +110,7 @@ P_expected = np.transpose(np.array([[0,1,2,3,4], [1,0,2,3,4]]))
 try:
     for i in range(num_repeats):
         # P_init[:,1] = np.random.permutation(num_dancers)
-        P, P_inv, M, M_inv = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
+        P, P_inv, M, M_inv, cost = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
         assert(np.all(np.equal(M,M_expected)))
         assert(np.all(np.equal(P,P_expected)))
     print("test 4 (Single constraint in f0, single constraint in f1 (different dancerID, same coordinateID)) with", num_repeats,"repeats passed!")
@@ -131,7 +131,7 @@ P_expected = np.transpose(np.array([[0,1,2,3,4], [1,2,3,0,4]]))
 try:
     for i in range(num_repeats):
         # P_init[:,1] = np.random.permutation(num_dancers)
-        P, P_inv, M, M_inv = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
+        P, P_inv, M, M_inv, cost = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
         assert(np.all(np.equal(M,M_expected)))
         assert(np.all(np.equal(P,P_expected)))
     print("test 5 (Single constraint in f0, single constraint in f1 (same dancerID, different coordinateID)) with", num_repeats,"repeats passed!")
@@ -152,7 +152,7 @@ P_expected = np.transpose(np.array([[0,1,2,3,4], [0,1,2,3,4]]))
 try:
     for i in range(num_repeats):
         # P_init[:,1] = np.random.permutation(num_dancers)
-        P, P_inv, M, M_inv = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
+        P, P_inv, M, M_inv, cost = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
         assert(np.all(np.equal(M,M_expected)))
         assert(np.all(np.equal(P,P_expected)))
     print("test 6 (Single constraint in f0, single constraint in f1 (same dancerID, same coordinateID) with", num_repeats,"repeats passed!")
@@ -173,7 +173,7 @@ P_expected = np.transpose(np.array([[0,1,2,3,4], [1,2,3,0,4]]))
 try:
     for i in range(num_repeats):
         # P_init[:,1] = np.random.permutation(num_dancers)
-        P, P_inv, M, M_inv = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
+        P, P_inv, M, M_inv, cost = optimize.optimize_formation(X, Y, C, P_init, max_iteration, sf1, sf2, sf3)
         assert(np.all(np.equal(M,M_expected)))
         assert(np.all(np.equal(P,P_expected)))
     print("test 7 (Mixed constraints (d0, d1 constrained in f0, d1, d2 constrained in f1) with", num_repeats,"repeats passed!")

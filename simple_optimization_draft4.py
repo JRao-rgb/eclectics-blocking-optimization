@@ -46,6 +46,11 @@ M = np.full(num_dancers, np.NAN) # mapping array that goes from physical locatio
 # X_raw[:,0], Y_raw[:,0] = formations.grid(num_dancers = num_dancers)
 # X_raw[:,1], Y_raw[:,1] = formations.grid(num_dancers = num_dancers,offset = [0,1])
 
+# actual formations
+X_raw[:,0], Y_raw[:,0] = formations.lines_and_windows(num_dancers = num_dancers)
+X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers)
+X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
+
 # initialize the permutation matrix
 P[:,] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
 
@@ -172,7 +177,7 @@ for formation in range(num_formations-1):
                                                                     X_final_swapped,
                                                                     Y_initial_swapped,
                                                                     Y_final_swapped),axis=0)
-                  
+                    
             # print("original distances")
             # print(geo.euclidean_distance(X[:,i],X[:,i+1],Y[:,i],Y[:,i+1]))
             # print("calculated max dist after swapping")

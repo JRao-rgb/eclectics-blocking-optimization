@@ -17,6 +17,8 @@ def optimize_formation(X, Y, C, P, max_iteration, sf1, sf2, sf3, display_metrics
     num_dancers = np.shape(X)[0]
     num_formations = np.shape(X)[1]
     
+    cost_array = np.zeros(max_iteration * int(num_formations-1)) # for benchmarking and convergence analysis purporses
+    
     P_inv = np.full((num_dancers,num_formations), 0, dtype=np.int8)
     P_inv[:, ] = np.linspace(0, num_dancers-1, num_dancers)[..., None]
     # of the algorithm is to figure out what numbers to put in here
@@ -119,6 +121,9 @@ def optimize_formation(X, Y, C, P, max_iteration, sf1, sf2, sf3, display_metrics
         # initialize an additional matrix that's similar to A, but gets modified during
         # the optimization process to reflects what's still available
         A_dynamic = A.copy()
+        
+        # initialize a target maximum cost to beat:
+        max_cost = 1e9
     
         # -------------------------------------------------------------------------
         # ======================= START ACTUAL OPTIMIZATION =======================
@@ -225,18 +230,18 @@ def optimize_formation(X, Y, C, P, max_iteration, sf1, sf2, sf3, display_metrics
                                                       positionID_to_be_assigned_path_start_y,
                                                       positionID_to_be_assigned_path_end_x, 
                                                       positionID_to_be_assigned_path_end_y,
-                                                      X[:, i][...,None], 
-                                                      Y[:, i][..., None],
-                                                      X[:, i+1][..., None], 
-                                                      Y[:, i+1][..., None]) + \
+                                                      X_initial, 
+                                                      Y_initial,
+                                                      X_final, 
+                                                      Y_final) + \
                                         geo.intersect(positionID_that_got_replaced_path_start_x, 
                                                       positionID_that_got_replaced_path_start_y,
                                                       positionID_that_got_replaced_path_end_x, 
                                                       positionID_that_got_replaced_path_end_y,
-                                                      X[:, i][..., None], 
-                                                      Y[:, i][..., None],
-                                                      X[:, i+1][..., None], 
-                                                      Y[:, i+1][..., None])
+                                                      X_initial, 
+                                                      Y_initial,
+                                                      X_final, 
+                                                      Y_final)
         
                     num_intersection = np.sum(arr_intersection, axis=0)
         
@@ -250,6 +255,8 @@ def optimize_formation(X, Y, C, P, max_iteration, sf1, sf2, sf3, display_metrics
                                                                 Y_initial,
                                                                 Y_final), axis=0)
 
+                    # if np.min(cost) > max_cost:
+                    #     continue
                     
                     ideal_assignment_idx = np.argmin(cost) # this is in terms of unknown IDs!!!
                     ideal_assignment_coordinateID = np.int8(np.linspace(0,num_dancers-1,num_dancers)[available_coordinate_IDs][ideal_assignment_idx])
@@ -258,6 +265,7 @@ def optimize_formation(X, Y, C, P, max_iteration, sf1, sf2, sf3, display_metrics
                         P[ideal_assignment_coordinateID, i+1], P[previously_assigned_coordinateID, i+1]
                     A_dynamic[:,ideal_assignment_coordinateID] = False
             
+                    max_cost = np.min(cost)
                     # print("Pa_start",positionID_to_be_assigned_path_start_x[0,:])
                     # print("Pa_end  ",positionID_to_be_assigned_path_end_x[0,:])
                     # print("Pi_start",positionID_that_got_replaced_path_start_x[0,:])
@@ -281,6 +289,8 @@ def optimize_formation(X, Y, C, P, max_iteration, sf1, sf2, sf3, display_metrics
                       "\tmax dist", metrics.max_distance(X[:, i:i+2], Y[:, i:i+2], P_inv[:, i:i+2]),
                       "\tavg dist", metrics.average_distance(X[:, i:i+2], Y[:, i:i+2], P_inv[:, i:i+2]),
                       "\tcost", np.min(cost))
+                
+            cost_array[formation * max_iteration + iteration] = np.min(cost) # for benchingmarking & convergence analysis purposes
         
         # assigning new values of M so that optimization in the next step can use this:
         # print(M, M_inv)
@@ -295,4 +305,4 @@ def optimize_formation(X, Y, C, P, max_iteration, sf1, sf2, sf3, display_metrics
         for coordinateID in range(num_dancers):
             P_inv[P[coordinateID,i+1],i+1] = coordinateID
             
-    return P, P_inv, M, M_inv
+    return P, P_inv, M, M_inv, cost_array
