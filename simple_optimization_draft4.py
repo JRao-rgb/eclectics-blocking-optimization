@@ -18,8 +18,8 @@ num_dancers = 28
 num_formations = 3
 
 sf1 = 1 # weighting of the intersection
-sf2 = 0 # weighting of the maximum distance
-sf3 = 0 # weighting to the average distance
+sf2 = 1 # weighting of the maximum distance
+sf3 = 1 # weighting to the average distance
 
 start_time = time.time()
 np.random.seed(42) # set the seed that we will use so the tests are repeatable
@@ -42,20 +42,17 @@ M = np.full(num_dancers, np.NAN) # mapping array that goes from physical locatio
 
 # ======================= suitable break point ============================
 
-X_raw[:,0], Y_raw[:,0] = formations.lines_and_windows(num_dancers = num_dancers)
-X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers)
-X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
-
 # # debugging formations
 # X_raw[:,0], Y_raw[:,0] = formations.grid(num_dancers = num_dancers)
 # X_raw[:,1], Y_raw[:,1] = formations.grid(num_dancers = num_dancers,offset = [0,1])
 
+# actual formations
+X_raw[:,0], Y_raw[:,0] = formations.lines_and_windows(num_dancers = num_dancers)
+X_raw[:,1], Y_raw[:,1] = formations.pyramid(num_dancers = num_dancers)
+X_raw[:,2], Y_raw[:,2] = formations.ring(num_dancers = num_dancers)
+
 # initialize the permutation matrix
 P[:,] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
-P[:,1] = np.random.permutation(num_dancers)
-# P[:,1] = np.linspace(0,num_dancers-1,num_dancers)[...,None]
-# P[:,1] = [3,4,2,1,0]
-P_ = np.copy(P)
 
 # loop over formations-1
 for formation in range(num_formations-1):
@@ -180,7 +177,7 @@ for formation in range(num_formations-1):
                                                                     X_final_swapped,
                                                                     Y_initial_swapped,
                                                                     Y_final_swapped),axis=0)
-                  
+                    
             # print("original distances")
             # print(geo.euclidean_distance(X[:,i],X[:,i+1],Y[:,i],Y[:,i+1]))
             # print("calculated max dist after swapping")
@@ -214,4 +211,4 @@ end_time = time.time()
 print("Optimization Completed. Time elapsed: ",end_time-start_time)
 
 #%%
-geo.animate_movement(X_raw,Y_raw,P,filename="5-31-24_animations/no_norm_COM, avgdist, symmtrc formations, late stop.gif")
+geo.animate_movement(X_raw,Y_raw,P,filename="5-31-24_animations/no_norm_COM, maxdist+avgdist, symmtrc formations, late stop.gif")
